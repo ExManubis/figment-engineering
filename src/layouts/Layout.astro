@@ -6,22 +6,42 @@ import '../styles/global.css';
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>Pixel Perfection - Web Design København - Lav pris, Høj kvalitet</title>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet" />
 	</head>
 	<body>
+		<canvas id="trail" class="fixed inset-0 z-1 pointer-events-none w-full h-full max-sm:hidden"></canvas>
+
+		<div class="shape-1 fixed z-0 pointer-events-none top-[14%] right-[10%] w-17.5 h-17.5 rounded-2xl bg-dusty-rose opacity-0"></div>
+		<div class="shape-2 fixed z-0 pointer-events-none bottom-[20%] left-[7%] w-10 h-10 rounded-full bg-warm-sand opacity-0"></div>
+		<div class="shape-3 fixed z-0 pointer-events-none top-[58%] right-[16%] w-6 h-6 rounded-full bg-cream opacity-0"></div>
+
 		<slot />
+
+		<script src="../scripts/cursor-trail.ts"></script>
 	</body>
 </html>
 
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
+	.shape-1 {
+		--op: 0.06;
+		animation: shapeIn 1.5s ease forwards 0.8s, float1 16s ease-in-out infinite 2s;
+	}
+
+	.shape-2 {
+		--op: 0.07;
+		animation: shapeIn 1.5s ease forwards 1s, float2 20s ease-in-out infinite 2s;
+	}
+
+	.shape-3 {
+		--op: 0.08;
+		animation: shapeIn 1.5s ease forwards 1.2s, float3 13s ease-in-out infinite 2s;
 	}
 </style>
