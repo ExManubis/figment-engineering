@@ -1,3 +1,4 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/5d63cbbe-65ee-46f2-9796-912a3db89b1c/deploy-status)](https://app.netlify.com/projects/spontaneous-otter-3be20a/deploys)
 # Astro Starter Kit: Basics
 
 ```sh
