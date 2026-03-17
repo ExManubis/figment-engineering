@@ -3,14 +3,41 @@ import '../styles/global.css';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="da">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content="Webdesign, udvikling og deployment i København. Professionelt resultat til en brøkdel af prisen hos bureauerne. Få et uforpligtende tilbud i dag." />
 		<title>Pixel Perfection - Web Design København - Lav pris, Høj kvalitet</title>
+
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://pixelperfection.dev" />
+		<meta property="og:site_name" content="Pixel Perfection" />
+		<meta property="og:title" content="Pixel Perfection - Web Design København" />
+		<meta property="og:description" content="Webdesign, udvikling og deployment i København. Professionelt resultat til en brøkdel af prisen hos bureauerne. Få et uforpligtende tilbud i dag." />
+		<meta property="og:locale" content="da_DK" />
+		<link rel="canonical" href="https://pixelperfection.dev" />
+
+		<script type="application/ld+json" set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@type": "ProfessionalService",
+			"name": "Pixel Perfection",
+			"url": "https://pixelperfection.dev",
+			"logo": "https://pixelperfection.dev/favicon.svg",
+			"email": "sales@pixelperfection.dev",
+			"description": "Webdesign, udvikling og deployment i København. Professionelt resultat til en brøkdel af prisen hos bureauerne.",
+			"areaServed": {
+				"@type": "City",
+				"name": "København"
+			},
+			"taxID": "DK46276051",
+			"priceRange": "$",
+			"knowsLanguage": ["da", "en"],
+			"serviceType": ["Webdesign", "Webudvikling", "Deployment"]
+		})} />
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
