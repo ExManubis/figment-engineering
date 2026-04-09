@@ -53,6 +53,14 @@ import '../styles/global.css';
 		<slot />
 
 		<script src="../scripts/cursor-trail.ts"></script>
+		<script>
+			import * as amplitude from '@amplitude/unified';
+			amplitude.initAll('2980fa258547c36f475afed98d75e2b4', {
+				"serverZone": "EU",
+				"analytics": { "autocapture": true },
+				"sessionReplay": { "sampleRate": 1 }
+			});
+		</script>
 	</body>
 </html>
 
