@@ -14,6 +14,7 @@
   "dependencies": {
     "@amplitude/unified": "^1.0.16",
     "@astrojs/sitemap": "^3.7.2",
+    "@sentry/astro": "^10.48.0",
     "@tailwindcss/vite": "^4.2.1",
     "astro": "^6.1.5",
     "tailwindcss": "^4.2.1"
