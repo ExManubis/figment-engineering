@@ -2,10 +2,10 @@ import { EMAIL, SMALLCLAIMS_URL, social as defaultSocial } from '../data/site';
 
 export const SITE = {
   url: 'https://figment.engineering',
-  title: 'Figment Engineering: Mikkel Jørgensen',
+  title: 'Figment Engineering',
   motto: "Things I make when no one's asking.",
   description:
-    "Things I make when no one's asking. The after-hours work of Mikkel Jørgensen, Design // AI Engineer in Copenhagen.",
+    'Design and engineering for AI-era tools, built in Copenhagen by Mikkel Jørgensen.',
 };
 
 export function personJsonLd(s: { github?: string; x?: string; linkedin?: string } = defaultSocial): object {
