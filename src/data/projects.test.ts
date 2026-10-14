@@ -7,6 +7,12 @@ describe('projects', () => {
     expect(projects[0].brand.primary).toBe('#DA7756');
   });
 
+  it('has PrompTTY second, in its logo cyan', () => {
+    expect(projects[1].id).toBe('promptty');
+    expect(projects[1].brand.primary).toBe('#00AAAA');
+    expect(projects[1].demo).toBe('promptty');
+  });
+
   it('keeps every entry within the design rules', () => {
     for (const p of projects) {
       expect(p.features.length).toBeGreaterThanOrEqual(3);

@@ -2,12 +2,13 @@
 import DecodeFrame from '../frame/DecodeFrame.astro';
 import AsciiHeader from '../type/AsciiHeader.astro';
 import ClaudewitzDemo from './demos/ClaudewitzDemo.astro';
+import PrompttyDemo from './demos/PrompttyDemo.astro';
 import GithubPixelIcon from '../icons/GithubPixelIcon.astro';
 import { frameLabel, type Project } from '../../data/projects';
 
 interface Props { project: Project; index: number }
 const { project, index } = Astro.props;
-const demos = { claudewitz: ClaudewitzDemo };
+const demos = { claudewitz: ClaudewitzDemo, promptty: PrompttyDemo };
 const Demo = demos[project.demo];
 // a word joiner after each "/" keeps the install command from wrapping mid-path on phones; it can only wrap at spaces
 const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
@@ -29,9 +30,10 @@ const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
 					l.copy ? (
 						<button type="button" class="link text-left" data-copy={l.copy} data-event={l.event}>{noSlashBreaks(l.label)}</button>
 					) : (
-						<a class="link inline-flex items-center gap-2" href={l.href} target="_blank" rel="noopener">{l.href?.startsWith('https://github.com/') && <GithubPixelIcon />}{l.label}</a>
+						<a class="link inline-flex items-center gap-2" href={l.href} target="_blank" rel="noopener">{l.label === 'GitHub' && <GithubPixelIcon />}{l.label}</a>
 					),
 				)}
+				{project.note && <span class="text-muted">{project.note}</span>}
 			</div>
 		</div>
 		<p class="sr-only" aria-live="polite" data-copy-status></p>
