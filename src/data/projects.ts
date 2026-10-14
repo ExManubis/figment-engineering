@@ -5,8 +5,6 @@ export interface ProjectLink {
   href?: string;
   /** text copied to the clipboard instead of navigating */
   copy?: string;
-  /** analytics event fired on success */
-  event?: string;
 }
 
 export interface Project {
@@ -40,7 +38,7 @@ export const projects: Project[] = [
     ],
     links: [
       { label: 'GitHub', href: 'https://github.com/ExManubis/Claudewitz' },
-      { label: '$ brew install exmanubis/tap/claudewitz', copy: 'brew install exmanubis/tap/claudewitz', event: 'install_command_copied' },
+      { label: '$ brew install exmanubis/tap/claudewitz', copy: 'brew install exmanubis/tap/claudewitz' },
     ],
     demo: 'claudewitz',
   },

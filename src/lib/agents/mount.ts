@@ -1,4 +1,3 @@
-import { track } from '../analytics';
 import { prefersReducedMotion, register, type Handle } from '../motion/scheduler';
 import { reportError } from '../report';
 import { frameAt, STILL_MS, type Frame } from './timeline';
@@ -64,7 +63,6 @@ export function mountPrompttyDemo(root: HTMLElement): void {
       if (failed) return;
       try {
         restart(performance.now() / 1000);
-        track('promptty_demo_replayed');
       } catch (err) {
         fail(err);
       }
