@@ -41,9 +41,10 @@
     background: none; border: 0; padding: 0; font: inherit; cursor: pointer;
   }
   .link:hover, .link:focus-visible { color: var(--color-fg); }
-  .js .js-hide { display: none; }
-  html:not(.js) .no-js-hide { display: none; }
+  /* !important: these sit in the components layer, so they must beat display utilities such as `block` */
+  .js .js-hide { display: none !important; }
+  html:not(.js) .no-js-hide { display: none !important; }
   /* an animation that failed: hide its canvas, show the static fallback */
-  [data-fallback] canvas { display: none; }
-  .js [data-fallback] .js-hide { display: block; }
+  [data-fallback] canvas { display: none !important; }
+  .js [data-fallback] .js-hide { display: block !important; }
 }

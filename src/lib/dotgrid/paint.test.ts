@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { grey, paintCells } from './paint';
+import { grey, paintCells, setupCanvas } from './paint';
 
 function fakeCtx() {
   return {
@@ -36,5 +36,21 @@ describe('paintCells', () => {
     const ctx = fakeCtx();
     paintCells(ctx, { cols: 2, rows: 1, cell: 4 }, [{ cov: 1, lum: 1 }, { cov: 0.5, lum: 1 }]);
     expect(ctx.arc).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('setupCanvas', () => {
+  it('keeps the inline width but lets height follow the aspect ratio, so a CSS max-width scales both', () => {
+    vi.stubGlobal('window', { devicePixelRatio: 2 });
+    const ctx = { setTransform: vi.fn() };
+    const canvas = { width: 0, height: 0, style: {} as Record<string, string>, getContext: () => ctx } as unknown as HTMLCanvasElement;
+    expect(setupCanvas(canvas, 200, 100)).toBe(ctx);
+    expect(canvas.width).toBe(400);
+    expect(canvas.height).toBe(200);
+    expect(canvas.style.width).toBe('200px');
+    expect(canvas.style.height).toBe('auto');
+    expect(canvas.style.aspectRatio).toBe('200 / 100');
+    expect(ctx.setTransform).toHaveBeenCalledWith(2, 0, 0, 2, 0, 0);
+    vi.unstubAllGlobals();
   });
 });

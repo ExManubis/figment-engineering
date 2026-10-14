@@ -41,7 +41,9 @@ export function setupCanvas(canvas: HTMLCanvasElement, cssW: number, cssH: numbe
   canvas.width = Math.round(cssW * dpr);
   canvas.height = Math.round(cssH * dpr);
   canvas.style.width = `${cssW}px`;
-  canvas.style.height = `${cssH}px`;
+  // height follows the width, so a CSS max-width (narrow phones) scales the canvas without stretching it
+  canvas.style.height = 'auto';
+  canvas.style.aspectRatio = `${cssW} / ${cssH}`;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas 2D is unavailable');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
