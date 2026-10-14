@@ -1,14 +1,16 @@
 ---
 import DecodeFrame from '../frame/DecodeFrame.astro';
 import AsciiHeader from '../type/AsciiHeader.astro';
+import FigbotTitle from '../type/FigbotTitle.astro';
 import ClaudewitzDemo from './demos/ClaudewitzDemo.astro';
+import FigbotDemo from './demos/FigbotDemo.astro';
 import PrompttyDemo from './demos/PrompttyDemo.astro';
 import PixelIcon from '../icons/PixelIcon.astro';
 import { frameLabel, type Project } from '../../data/projects';
 
 interface Props { project: Project; index: number }
 const { project, index } = Astro.props;
-const demos = { claudewitz: ClaudewitzDemo, promptty: PrompttyDemo };
+const demos = { claudewitz: ClaudewitzDemo, figbot: FigbotDemo, promptty: PrompttyDemo };
 const Demo = demos[project.demo];
 // a word joiner after each "/" keeps the install command from wrapping mid-path on phones; it can only wrap at spaces
 const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
@@ -17,14 +19,16 @@ const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
 <section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[1200px] px-6" data-copy-scope data-scroll-stop="center">
 	<DecodeFrame label={frameLabel(index, project.name)} brand={project.brand}>
 		<h3 id={`${project.id}-title`} class="sr-only">{project.name}</h3>
-		<AsciiHeader text={project.name} variant={project.header} />
+		{project.header === 'figbot' ? <FigbotTitle /> : <AsciiHeader text={project.name} variant={project.header} />}
 		{/* desktop: copy in the left column, demo spanning the right; phones keep the source order */}
 		<div class="lg:grid lg:grid-cols-2 lg:grid-rows-[auto_auto_1fr] lg:gap-x-16">
 			<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6] text-muted lg:col-start-1 lg:row-start-1 lg:mt-10">{project.description}</p>
 			<div class="mt-12 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-10"><Demo /></div>
-			<ul class="mt-12 grid max-w-[40rem] gap-3 text-[15px] leading-[1.6] lg:col-start-1 lg:row-start-2">
-				{project.features.map((f) => <li>{f}</li>)}
-			</ul>
+			{project.features.length > 0 && (
+				<ul class="mt-12 grid max-w-[40rem] gap-3 text-[15px] leading-[1.6] lg:col-start-1 lg:row-start-2">
+					{project.features.map((f) => <li>{f}</li>)}
+				</ul>
+			)}
 			<div class="label mt-12 flex flex-wrap gap-x-8 gap-y-4 lg:col-start-1 lg:row-start-3 lg:self-start">
 				{project.links.map((l) =>
 					l.copy ? (
