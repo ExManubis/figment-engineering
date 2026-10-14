@@ -2,7 +2,7 @@
 import { Resvg } from '@resvg/resvg-js';
 import { dotRadius, grey, type DotCell } from '../../src/lib/dotgrid/paint';
 
-const FONTS = ['scripts/assets/DepartureMono-Regular.otf', 'scripts/assets/BitcountPropSingle-Regular.ttf'];
+const FONTS = ['scripts/assets/DepartureMono-Regular.otf', 'scripts/assets/BitcountPropSingle-Regular.ttf', 'scripts/assets/Jersey15Charted-Regular.ttf'];
 export const BG = '#0A0A0A';
 export const FG = '#EDEDED';
 
