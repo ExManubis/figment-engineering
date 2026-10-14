@@ -1,0 +1,83 @@
+---
+import smallclaims from '../../data/smallclaims-pixels.json';
+
+// Brand marks redrawn on a 16 × 16 pixel grid; one unit per pixel, filled in currentColor.
+const GRIDS = {
+	github: [
+		'.....######.....',
+		'...##########...',
+		'..############..',
+		'.###.######.###.',
+		'.###........###.',
+		'####........####',
+		'###..........###',
+		'###..........###',
+		'###..........###',
+		'###..........###',
+		'####........####',
+		'.#####....#####.',
+		'.##.##....#####.',
+		'..##......####..',
+		'...###....###...',
+		'.....#....#.....',
+	],
+	// the thin stroke breaks where it crosses the thick one, as in the mark
+	x: [
+		'####..........##',
+		'.####........##.',
+		'..####......##..',
+		'..####.....##...',
+		'...####...##....',
+		'....####.##.....',
+		'.....####.......',
+		'......####......',
+		'......####......',
+		'.......####.....',
+		'.....##.####....',
+		'....##...####...',
+		'...##.....####..',
+		'..##......####..',
+		'.##........####.',
+		'##..........####',
+	],
+	// "in" cut out of a rounded square
+	linkedin: [
+		'.##############.',
+		'################',
+		'################',
+		'###..###########',
+		'###..###########',
+		'################',
+		'###..##.....####',
+		'###..##..##..###',
+		'###..##..##..###',
+		'###..##..##..###',
+		'###..##..##..###',
+		'###..##..##..###',
+		'###..##..##..###',
+		'################',
+		'################',
+		'.##############.',
+	],
+};
+
+// the smallclaims S, as rasterised for the hero's marks row (19 × 22), as rows of the same kind
+const SC_GRID = Array.from({ length: smallclaims.rows }, (_, y) =>
+	Array.from({ length: smallclaims.cols }, (_, x) => (smallclaims.px.some(([i, j]) => i === x && j === y) ? '#' : '.')).join(''),
+);
+
+interface Props { name: keyof typeof GRIDS | 'smallclaims' }
+const grid = Astro.props.name === 'smallclaims' ? SC_GRID : GRIDS[Astro.props.name];
+const cols = grid[0].length, rows = grid.length;
+// one sub-path per horizontal run of filled pixels
+const d = grid.flatMap((row, y) =>
+	[...row.matchAll(/#+/g)].map((m) => `M${m.index} ${y}h${m[0].length}v1h-${m[0].length}z`),
+).join('');
+---
+
+{/* 16px tall; a grid that isn't square keeps its shape */}
+<svg class="pixel-icon" viewBox={`0 0 ${cols} ${rows}`} width={Math.round((16 * cols) / rows)} height="16" aria-hidden="true" focusable="false"><path d={d} fill="currentColor" /></svg>
+
+<style>
+	.pixel-icon { flex: none; shape-rendering: crispEdges; }
+</style>

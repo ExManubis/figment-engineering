@@ -3,7 +3,7 @@ import DecodeFrame from '../frame/DecodeFrame.astro';
 import AsciiHeader from '../type/AsciiHeader.astro';
 import ClaudewitzDemo from './demos/ClaudewitzDemo.astro';
 import PrompttyDemo from './demos/PrompttyDemo.astro';
-import GithubPixelIcon from '../icons/GithubPixelIcon.astro';
+import PixelIcon from '../icons/PixelIcon.astro';
 import { frameLabel, type Project } from '../../data/projects';
 
 interface Props { project: Project; index: number }
@@ -30,7 +30,7 @@ const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
 					l.copy ? (
 						<button type="button" class="link text-left" data-copy={l.copy}>{noSlashBreaks(l.label)}</button>
 					) : (
-						<a class="link inline-flex items-center gap-2" href={l.href} target="_blank" rel="noopener">{l.label === 'GitHub' && <GithubPixelIcon />}{l.label}</a>
+						<a class="link inline-flex items-center gap-2" href={l.href} target="_blank" rel="noopener">{l.label === 'GitHub' && <PixelIcon name="github" />}{l.label}</a>
 					),
 				)}
 				{project.note && <span class="text-muted">{project.note}</span>}
