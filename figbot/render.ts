@@ -21,7 +21,7 @@ const square = (p: Pose) => toSvg(cells(p, GRID, GRID), GRID, GRID);
 mkdirSync(`${OUT}/expressions`, { recursive: true });
 
 // hero: Idle, square and 16:9 (sphere bottom-left, black space to the right)
-const hero = square(POSES.idle);
+const hero = toSvg(cells(POSES.idle, GRID, GRID), GRID, GRID, GRID, 2048);
 writeFileSync(`${OUT}/hero-square.svg`, hero);
 writeFileSync(`${OUT}/hero-square.png`, png(hero, 2048));
 const WIDE = (GRID * 16) / 9; // 85.33 cells: crop the last column so the PNG is exactly 2560×1440
@@ -66,7 +66,7 @@ writeFileSync(`${OUT}/live.html`, `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>figbot</title>
-<style>html,body{margin:0;height:100%;background:${BG_COLOR};overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style>
+<style>html,body{margin:0;height:100%;background:${BG_COLOR};overflow:hidden}canvas{display:block;position:fixed;inset:0;width:100%;height:100%}</style>
 </head>
 <body>
 <canvas aria-label="Figbot, a halftone mascot. Press 1 to 7 to change its expression, 0 to resume." role="img"></canvas>

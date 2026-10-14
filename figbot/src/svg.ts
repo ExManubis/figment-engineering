@@ -21,6 +21,8 @@ export function svgBody(c: ArrayLike<number>, cols: number, rows: number): strin
   return `<rect width="${cols}" height="${rows}" fill="${BG_COLOR}"/><g fill="${FG_COLOR}">${dots.join('')}</g>`;
 }
 
-export function toSvg(c: ArrayLike<number>, cols: number, rows: number, viewWidth = cols): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewWidth} ${rows}" width="${viewWidth}" height="${rows}">${svgBody(c, cols, rows)}</svg>`;
+/** `pixelWidth` sets the displayed size (height follows the aspect ratio); it defaults to one pixel per cell. */
+export function toSvg(c: ArrayLike<number>, cols: number, rows: number, viewWidth = cols, pixelWidth = viewWidth): string {
+  const pixelHeight = (pixelWidth * rows) / viewWidth;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewWidth} ${rows}" width="${pixelWidth}" height="${pixelHeight}">${svgBody(c, cols, rows)}</svg>`;
 }

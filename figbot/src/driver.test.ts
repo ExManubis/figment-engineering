@@ -47,4 +47,16 @@ describe('driver', () => {
     for (const k of ['0', '8', '9', 'a', ' ', 'Enter', '10']) d.press(k, 2);
     expectPoseClose(d.pose(6), poseAt(6));
   });
+
+  it('resumes smoothly even when the loop changes eye shape during the blend', () => {
+    const d = createDriver();
+    d.press('1', 5.85);   // hold Idle just after the loop's thinking → happy swap begins
+    d.press('0', 10);     // resume at loop time 5.85; the loop flips to arcs within the blend
+    let prev = d.pose(10).open;
+    for (let i = 1; i <= 60; i++) {
+      const open = d.pose(10 + i / 120).open;
+      expect(Math.abs(open - prev), `step ${i}`).toBeLessThan(0.1);
+      prev = open;
+    }
+  });
 });

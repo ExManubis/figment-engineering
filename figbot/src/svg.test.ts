@@ -34,4 +34,8 @@ describe('svg', () => {
   it('can crop the viewBox narrower than the grid (for exact aspect ratios)', () => {
     expect(toSvg([1, 1, 1], 3, 1, 2.5)).toContain('viewBox="0 0 2.5 1" width="2.5" height="1"');
   });
+
+  it('can set the pixel size, keeping the aspect ratio', () => {
+    expect(toSvg([1, 1], 2, 1, 2, 2048)).toContain('viewBox="0 0 2 1" width="2048" height="1024"');
+  });
 });

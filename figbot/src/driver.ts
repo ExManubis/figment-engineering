@@ -12,6 +12,7 @@ export function createDriver(): Driver {
   let loopT = 0;               // loop time at `mark`
   let mark = 0;                // wall time of the last change
   let from: Stage | null = null;
+  let dip = false;             // blink through this blend? decided once per change
 
   const target = (now: number): Stage =>
     held ? { pose: POSES[held], thinking: held === 'thinking' ? 1 : 0 } : stageAt(loopT + now - mark);
@@ -21,7 +22,7 @@ export function createDriver(): Driver {
     const k = (now - mark) / TRANSITION;
     if (!from || k >= 1) return to;
     const s = smoothstep(k);
-    return { pose: transition(from.pose, to.pose, k), thinking: from.thinking + (to.thinking - from.thinking) * s };
+    return { pose: transition(from.pose, to.pose, k, dip), thinking: from.thinking + (to.thinking - from.thinking) * s };
   };
 
   return {
@@ -35,6 +36,9 @@ export function createDriver(): Driver {
       held = n === 0 ? null : EXPRESSIONS[n - 1];
       from = current;
       mark = now;
+      // the loop may change shape mid-blend; decide the blink now so it can't switch on halfway
+      const shape = current.pose.shape;
+      dip = shape !== target(now).pose.shape || shape !== target(now + TRANSITION).pose.shape;
     },
   };
 }

@@ -33,10 +33,10 @@ export const smoothstep = (k: number) => {
 // exact for t already in [0, LOOP), unlike ((t % LOOP) + LOOP) % LOOP
 const wrap = (t: number) => t - LOOP * Math.floor(t / LOOP);
 
-/** Blend a → b at raw progress k (0..1); a change of eye shape is hidden behind a blink. */
-export function transition(a: Pose, b: Pose, k: number): Pose {
+/** Blend a → b at raw progress k (0..1); a change of eye shape is hidden behind a blink (`dip`). */
+export function transition(a: Pose, b: Pose, k: number, dip = a.shape !== b.shape): Pose {
   const p = lerp(a, b, smoothstep(k));
-  if (a.shape !== b.shape) p.open *= 1 - 0.94 * (1 - Math.abs(2 * Math.min(1, Math.max(0, k)) - 1));
+  if (dip) p.open *= 1 - 0.94 * (1 - Math.abs(2 * Math.min(1, Math.max(0, k)) - 1));
   return p;
 }
 

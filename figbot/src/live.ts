@@ -10,7 +10,8 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const now = () => performance.now() / 1000;
 
 function draw(pose: Pose) {
-  const w = innerWidth, h = innerHeight, dpr = devicePixelRatio || 1;
+  // the canvas's own box, not innerWidth/innerHeight: mobile toolbars make 100vh ≠ innerHeight
+  const w = canvas.clientWidth, h = canvas.clientHeight, dpr = devicePixelRatio || 1;
   if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
