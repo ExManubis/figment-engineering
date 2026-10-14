@@ -15,6 +15,7 @@ let frames: ((t: number) => void)[];
 function fakeWindow(y = 0) {
   const sections = [[0, 900], [1140, 1900], [2140, 2870], [3110, 3800]].map(([top, bottom]) => ({
     dataset: {},
+    contains: () => false,
     getBoundingClientRect: () => ({ top: top - win.scrollY, bottom: bottom - win.scrollY }),
   }));
   const win = {
@@ -26,11 +27,16 @@ function fakeWindow(y = 0) {
     addEventListener: (type: string, h: Handler) => { handlers[type] = h; },
     matchMedia: () => ({ matches: finePointer }),
   }));
+  const work = { contains: (el: unknown) => el === sections[1] || el === sections[2] };
+  const ids: Record<string, unknown> = { promptty: sections[2], work, contact: { contains: () => false } };
   vi.stubGlobal('document', {
     querySelectorAll: () => sections,
     documentElement: { scrollHeight: 3800 },
     querySelector: () => ({ getBoundingClientRect: () => ({ height: 80 }) }),
+    getElementById: (id: string) => ids[id] ?? null,
+    addEventListener: (type: string, h: Handler) => { handlers[`document:${type}`] = h; },
   });
+  vi.stubGlobal('history', { pushState: vi.fn() });
   vi.stubGlobal('requestAnimationFrame', (cb: (t: number) => void) => { frames.push(cb); return frames.length; });
   vi.stubGlobal('performance', { now: () => 0 });
   return win;
@@ -101,6 +107,27 @@ describe('mountScrollLock', () => {
     expect(key('ArrowDown', { metaKey: true }).preventDefault).not.toHaveBeenCalled();
     expect(key(' ', { target: { closest: () => ({}) } }).preventDefault).not.toHaveBeenCalled();
     expect(win.scrollY).toBe(2060);
+  });
+
+  it('takes in-page links to a section, or to a wrapper around one, to its stop with the eased scroll', () => {
+    const win = fakeWindow();
+    mountScrollLock();
+    const click = (href: string, extra: Record<string, unknown> = {}) => {
+      const e = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, preventDefault: vi.fn(),
+        target: { closest: () => ({ getAttribute: () => href }) }, ...extra };
+      handlers['document:click'](e);
+      flush();
+      return e;
+    };
+    expect(click('#promptty').preventDefault).toHaveBeenCalled();
+    expect(win.scrollY).toBe(2060);
+    expect(history.pushState).toHaveBeenLastCalledWith(null, '', '#promptty');
+    click('#work');
+    expect(win.scrollY).toBe(1060);
+    // not a section: the browser handles it
+    expect(click('#contact').preventDefault).not.toHaveBeenCalled();
+    // a modified click opens a tab; leave it alone
+    expect(click('#promptty', { metaKey: true }).preventDefault).not.toHaveBeenCalled();
   });
 
   it('lets pinch-zoom and sideways scrolling through', () => {

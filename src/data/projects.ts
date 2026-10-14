@@ -14,6 +14,8 @@ export interface Project {
   /** primary is the solid brand colour; gradient, when set, runs left → right across the ANSI header and the frame instead */
   brand: { primary: string; secondary?: string; gradient?: [string, string] };
   description: string;
+  /** small square mark for the hero's link to the section */
+  icon: string;
   /** 3–4 short lines */
   features: string[];
   links: ProjectLink[];
@@ -29,6 +31,7 @@ export const projects: Project[] = [
     id: 'claudewitz',
     name: 'Claudewitz',
     brand: { primary: '#DA7756', secondary: '#B497FF', gradient: ['#DA702C', '#3AA99F'] },
+    icon: '/icons/claudewitz.svg',
     description: 'A Crush-style terminal UI for Claude Code that runs on the subscription you already have.',
     features: [
       'Drives the claude CLI, so Claude Code\'s tools, MCP servers, skills and hooks just work.',
@@ -46,6 +49,7 @@ export const projects: Project[] = [
     id: 'promptty',
     name: 'PrompTTY',
     brand: { primary: '#00AAAA', gradient: ['#00AAAA', '#55FFFF'] },
+    icon: '/icons/promptty.svg',
     description: 'A native macOS terminal for working alongside coding agents, built on libghostty.',
     features: [
       'Spots Claude Code, Codex, Amp and others in any pane, and shows whether each is working, waiting or done.',

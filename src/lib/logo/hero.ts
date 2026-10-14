@@ -8,16 +8,23 @@ import { HERO_GEOM } from '../render/sdf';
 import { reportError } from '../report';
 
 const ASPECT = 430 / 560;
-const MOTTO_SECONDS = 1.2;
+const TITLE_SECONDS = 1.2;
+/** Target dot cell size in CSS px; the grid gets as many cells as fit the box. */
+const CELL_PX = 4.5;
 const SLOW_MS = 50;
 /** The slow-device guard judges a window only once it is this long and holds this many frames. */
 const SLOW_WINDOW_MS = 2000;
 const MIN_SAMPLES = 20;
 
+/** Cells across a hero box `width` px wide: about CELL_PX each, fewer at lower quality, never under 24. */
+export function heroCols(width: number, quality: number): number {
+  return Math.max(24, Math.round((width / CELL_PX) * quality));
+}
+
 export function mountHero(root: HTMLElement): void {
   const box = root.querySelector<HTMLElement>('[data-hero-logo]');
   const canvas = box?.querySelector('canvas');
-  const motto = root.querySelector<HTMLElement>('[data-motto-decode]');
+  const title = root.querySelector<HTMLElement>('[data-title-decode]');
   if (!box || !canvas) return;
 
   let quality = 1;
@@ -27,8 +34,7 @@ export function mountHero(root: HTMLElement): void {
   const size = () => {
     const w = box.clientWidth;
     const dpr = window.devicePixelRatio || 1;
-    const base = window.innerWidth < 640 ? 60 : 124;
-    const target = Math.max(24, Math.round(base * quality));
+    const target = heroCols(w, quality);
     // whole device pixels per cell, so the background grid does not moiré; cols refill the box
     cell = Math.max(1, Math.round((w / target) * dpr)) / dpr;
     cols = Math.max(1, Math.floor(w / cell));
@@ -37,20 +43,20 @@ export function mountHero(root: HTMLElement): void {
   };
   const draw = (t: number) => paintCells(ctx, { cols, rows, cell, bgGrid: true }, renderLogo({ cols, rows }, HERO_GEOM, pose(t, 'orbit')));
 
-  // motto: the real text is in an sr-only sibling; this aria-hidden copy is server-rendered dim,
+  // the name: the real text is in an sr-only sibling; this aria-hidden copy is server-rendered dim,
   // decodes on the first focus lock and ends lit (fg)
-  const text = motto?.dataset.text ?? '';
-  const showMotto = () => {
-    if (!motto) return;
-    motto.textContent = text;
-    motto.dataset.lit = '';
+  const text = title?.dataset.text ?? '';
+  const showTitle = () => {
+    if (!title) return;
+    title.textContent = text;
+    title.dataset.lit = '';
   };
 
   let handle: Handle | null = null;
   let failed = false;
   let stopped = false;
 
-  // Single give-up path: report, show the still image, restore the motto, stop the scheduler once.
+  // Single give-up path: report, show the still image, restore the name, stop the scheduler once.
   const stopOnce = () => {
     if (stopped || !handle) return;
     stopped = true;
@@ -60,7 +66,7 @@ export function mountHero(root: HTMLElement): void {
     failed = true;
     if (err) reportError(err);
     box.dataset.fallback = '';
-    showMotto();
+    showTitle();
     stopOnce();
   };
 
@@ -75,7 +81,7 @@ export function mountHero(root: HTMLElement): void {
   const seeds = makeTextSeeds(text, rng);
 
   if (prefersReducedMotion()) {
-    showMotto();
+    showTitle();
     try {
       draw(LOCK_CENTRE);
     } catch (err) {
@@ -84,8 +90,8 @@ export function mountHero(root: HTMLElement): void {
     return;
   }
 
-  let mottoStart: number | null = null;
-  let mottoDone = false;
+  let titleStart: number | null = null;
+  let titleDone = false;
 
   let samples = 0, totalMs = 0, windowStart = performance.now();
 
@@ -122,13 +128,13 @@ export function mountHero(root: HTMLElement): void {
           samples = 0; totalMs = 0; windowStart = start;
         }
 
-        if (motto && !mottoDone) {
-          if (mottoStart === null && lockWeight(t) > 0.5) mottoStart = now;
-          if (mottoStart !== null) {
-            const p = (now - mottoStart) / MOTTO_SECONDS;
-            motto.textContent = decodeText(text, seeds, Math.min(1, p), rng);
-            if (p > 0.5) motto.dataset.lit = '';
-            if (p >= 1) mottoDone = true;
+        if (title && !titleDone) {
+          if (titleStart === null && lockWeight(t) > 0.5) titleStart = now;
+          if (titleStart !== null) {
+            const p = (now - titleStart) / TITLE_SECONDS;
+            title.textContent = decodeText(text, seeds, Math.min(1, p), rng);
+            if (p > 0.5) title.dataset.lit = '';
+            if (p >= 1) titleDone = true;
           }
         }
       } catch (err) {

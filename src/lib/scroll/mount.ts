@@ -31,13 +31,16 @@ export function mountScrollLock(): void {
     return { sections, vh, nav, max: Math.max(0, height - vh) };
   };
 
+  let run = 0; // a new scroll takes over from one still running
   const scrollTo = (target: number) => {
     const from = window.scrollY;
     if (Math.abs(target - from) < 1) return;
     animating = true;
     gate.setAnimating(true);
     const start = performance.now();
+    const id = ++run;
     const step = (now: number) => {
+      if (id !== run) return;
       try {
         const t = Math.min(1, (now - start) / DURATION_MS);
         window.scrollTo({ top: from + (target - from) * easeInOutCubic(t), behavior: 'instant' });
@@ -68,6 +71,24 @@ export function mountScrollLock(): void {
       reportError(err);
     }
   }, { passive: false });
+
+  // in-page links to a section, or to a wrapper around one (#work), take the same eased scroll to its stop
+  document.addEventListener('click', (e) => {
+    try {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const href = (e.target as Element | null)?.closest?.('a[href^="#"]')?.getAttribute('href');
+      const target = href ? document.getElementById(href.slice(1)) : null;
+      if (!href || !target) return;
+      const stops = [...document.querySelectorAll<HTMLElement>('[data-scroll-stop]')];
+      const i = stops.findIndex((el) => el === target || target.contains(el));
+      if (i < 0) return;
+      e.preventDefault();
+      history.pushState(null, '', href);
+      scrollTo(stopPositions(layout())[i]);
+    } catch (err) {
+      reportError(err);
+    }
+  });
 
   window.addEventListener('keydown', (e) => {
     try {

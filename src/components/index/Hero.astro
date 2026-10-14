@@ -1,20 +1,34 @@
 ---
-import { SITE } from '../../lib/seo';
+import { projects } from '../../data/projects';
+import HeroMarks from './HeroMarks.astro';
+
+const NAME = 'Figment Engineering';
+// shown on two rows; screen readers get the name on one line
+const TITLE = 'Figment\nEngineering';
 ---
 
 <section
 	id="top"
-	class="mx-auto flex min-h-svh w-full max-w-[1200px] flex-col items-center justify-center gap-10 px-6 pt-20 lg:grid lg:grid-cols-2 lg:gap-16"
+	class="relative mx-auto flex min-h-svh w-full max-w-[1200px] flex-col items-center justify-center gap-10 px-6 pt-20"
 	data-hero
 	data-scroll-stop
 >
-	<h2 class="sr-only">Intro</h2>
-	<div class="hero-logo w-full max-w-[560px] lg:order-2 lg:justify-self-end" data-hero-logo role="img" aria-label="Figment Engineering logo">
+	<div class="hero-logo w-full max-w-[320px]" data-hero-logo role="img" aria-label="Figment Engineering logo">
 		<canvas class="no-js-hide mx-auto block"></canvas>
 		<img class="hero-fallback" src="/logo-still.png" alt="" width="560" height="430" loading="lazy" />
 	</div>
-	<p class="min-h-[1.4em] text-center text-[20px] leading-[1.4] lg:order-1 lg:text-left lg:text-[36px] lg:leading-[1.25] xl:text-[44px] xl:leading-[1.2]"><span class="sr-only">{SITE.motto}</span><span
-		class="motto-decode" aria-hidden="true" data-motto-decode data-text={SITE.motto}>{SITE.motto}</span></p>
+	<h1 class="text-center text-[28px] leading-[1.2] sm:text-[36px] xl:text-[44px]"><span class="sr-only">{NAME}</span><span
+		class="title-decode" aria-hidden="true" data-title-decode data-text={TITLE}>{TITLE}</span></h1>
+	<ul class="label flex flex-wrap justify-center gap-4 sm:gap-6">
+		{projects.map((p) => (
+			<li>
+				<a class="hero-link" href={`#${p.id}`}>
+					<img src={p.icon} alt="" width="16" height="16" />{p.name}
+				</a>
+			</li>
+		))}
+	</ul>
+	<HeroMarks />
 </section>
 
 <script>
@@ -30,7 +44,25 @@ import { SITE } from '../../lib/seo';
 	:global(html:not(.js)) .hero-fallback,
 	[data-fallback] .hero-fallback { display: block; }
 	[data-fallback] canvas { display: none; }
-	/* with JS the motto starts dim (still painted, so it is the LCP text) and the script lights it */
-	:global(html.js) .motto-decode:not([data-lit]) { color: var(--color-subtle); }
-	.motto-decode { white-space: pre-wrap; }
+	/* with JS the name starts dim (still painted, so it is the LCP text) and the script lights it */
+	:global(html.js) .title-decode:not([data-lit]) { color: var(--color-subtle); }
+	.title-decode { white-space: pre-wrap; }
+
+	/* like their outlined buttons: dotted border, the project's mark greyscale until hover or focus */
+	.hero-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		min-width: 200px;
+		height: 40px;
+		padding: 0 20px;
+		border: 1px dotted var(--color-muted);
+		color: var(--color-muted);
+		text-decoration: none;
+		transition: color 0.2s, border-color 0.2s;
+	}
+	.hero-link img { image-rendering: pixelated; filter: grayscale(1); transition: filter 0.2s; }
+	.hero-link:hover, .hero-link:focus-visible { color: var(--color-fg); border-color: var(--color-fg); }
+	.hero-link:hover img, .hero-link:focus-visible img { filter: none; }
 </style>
