@@ -17,9 +17,9 @@ vi.mock('../dotgrid/paint', async (orig) => ({
 vi.mock('../render/raymarch', () => ({ renderLogo: m.renderLogo }));
 vi.mock('../report', () => ({ reportError: m.reportError }));
 
-import { mountHero } from './hero';
+import { heroCols, mountHero } from './hero';
 
-const TEXT = "Things I make when no one's asking.";
+const TEXT = 'Figment Engineering';
 type Frame = (t: number, dt: number) => void;
 
 let clock = 0;
@@ -29,7 +29,7 @@ function fakeHero() {
   const box = { clientWidth: 560, dataset: {} as Record<string, string>, querySelector: () => canvas };
   const decode = { textContent: TEXT, dataset: { text: TEXT } as Record<string, string> };
   const root = {
-    querySelector: (sel: string) => (sel === '[data-hero-logo]' ? box : sel === '[data-motto-decode]' ? decode : null),
+    querySelector: (sel: string) => (sel === '[data-hero-logo]' ? box : sel === '[data-title-decode]' ? decode : null),
   } as unknown as HTMLElement;
   return { root, box, decode };
 }
@@ -59,7 +59,7 @@ afterEach(() => {
 });
 
 describe('mountHero', () => {
-  it('on a frame failure reports once, shows the still image, restores the motto and stops exactly once', () => {
+  it('on a frame failure reports once, shows the still image, restores the name and stops exactly once', () => {
     const { box, decode, stop, frame } = mount();
     m.paintCells.mockImplementation(() => { throw new Error('boom'); });
     expect(() => { frame(1, 0); frame(1.04, 0.04); frame(1.08, 0.04); }).not.toThrow();
@@ -70,7 +70,7 @@ describe('mountHero', () => {
     expect(stop).toHaveBeenCalledTimes(1);
   });
 
-  it('paints a single static frame under reduced motion and shows the motto lit at once', () => {
+  it('paints a single static frame under reduced motion and shows the name lit at once', () => {
     m.prefersReducedMotion.mockReturnValue(true);
     const { decode } = mount();
     expect(m.paintCells).toHaveBeenCalledTimes(1);
@@ -79,7 +79,7 @@ describe('mountHero', () => {
     expect(decode.dataset.lit).toBe('');
   });
 
-  it('leaves the server-rendered motto in place until the decode starts', () => {
+  it('leaves the server-rendered name in place until the decode starts', () => {
     const { decode, frame } = mount();
     frame(0, 0);
     expect(decode.textContent).toBe(TEXT);
@@ -115,5 +115,17 @@ describe('mountHero', () => {
     expect(box.dataset.fallback).toBe('');
     expect(stop).toHaveBeenCalledTimes(1);
     expect(m.reportError).not.toHaveBeenCalled();
+  });
+});
+
+describe('heroCols', () => {
+  it('keeps the dots about 4.5px across, whatever the box width', () => {
+    expect(heroCols(320, 1)).toBe(71);
+    expect(heroCols(560, 1)).toBe(124);
+  });
+
+  it('coarsens with quality, never below 24 cells', () => {
+    expect(heroCols(320, 0.6)).toBe(43);
+    expect(heroCols(60, 0.6)).toBe(24);
   });
 });
