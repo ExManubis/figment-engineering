@@ -37,6 +37,12 @@ describe('paintCells', () => {
     paintCells(ctx, { cols: 2, rows: 1, cell: 4 }, [{ cov: 1, lum: 1 }, { cov: 0.5, lum: 1 }]);
     expect(ctx.arc).toHaveBeenCalledTimes(2);
   });
+
+  it('draws a dot off its cell centre by its offset', () => {
+    const ctx = fakeCtx();
+    paintCells(ctx, { cols: 2, rows: 1, cell: 4 }, [undefined, { cov: 1, lum: 1, dx: 3, dy: -2 }]);
+    expect(vi.mocked(ctx.arc).mock.calls[0].slice(0, 2)).toEqual([6 + 3, 2 - 2]);
+  });
 });
 
 describe('setupCanvas', () => {
