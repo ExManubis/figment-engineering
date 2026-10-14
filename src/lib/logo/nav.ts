@@ -53,7 +53,7 @@ export function mountNavLogo(canvas: HTMLCanvasElement): void {
     }
     handle = register({
       el: canvas,
-      fps: 30,
+      fps: 20,
       frame: (now) => {
         try { paintCells(ctx, spec, navLogoCells(logoTime(now))); } catch (err) { fail(err); }
       },

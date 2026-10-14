@@ -1,6 +1,6 @@
 export const PROMPT = '$ ';
 export const COMMAND = 'brew install exmanubis/tap/claudewitz';
-export const OUTPUT = ['==> Fetching exmanubis/tap/claudewitz', '==> Pouring claudewitz', '✓ claudewitz installed', '$ claudewitz'];
+export const OUTPUT = ['==> Fetching exmanubis/tap/claudewitz', '==> Pouring claudewitz', '==> claudewitz installed', '$ claudewitz'];
 export const TYPE_MS = 40;
 export const PAUSE_MS = 300;
 export const LINE_MS = 350;

@@ -52,6 +52,12 @@ describe('mountNavLogo', () => {
     expect(m.register).not.toHaveBeenCalled();
   });
 
+  it('registers at 20 fps (it is small and always on screen)', () => {
+    m.register.mockReturnValue({ stop: vi.fn() });
+    mountNavLogo(fakeCanvas().canvas);
+    expect(m.register.mock.calls[0][0]).toMatchObject({ fps: 20 });
+  });
+
   it('paints a single static frame under reduced motion', () => {
     m.prefersReducedMotion.mockReturnValue(true);
     mountNavLogo(fakeCanvas().canvas);

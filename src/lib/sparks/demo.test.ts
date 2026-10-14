@@ -11,4 +11,8 @@ describe('terminalText', () => {
   });
   it('ends with the full transcript', () => expect(terminalText(60_000)).toEqual({ text: TRANSCRIPT, done: true }));
   it('never goes backwards for negative time', () => expect(terminalText(-100).text).toBe('$ '));
+  it('reports the install with a glyph Departure Mono has (printable ASCII only)', () => {
+    expect(OUTPUT).toContain('==> claudewitz installed');
+    expect(TRANSCRIPT).toMatch(/^[\x20-\x7e\n]*$/);
+  });
 });

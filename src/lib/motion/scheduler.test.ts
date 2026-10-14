@@ -136,6 +136,43 @@ describe('scheduler', () => {
   });
 });
 
+describe('stopping', () => {
+  function wired() {
+    let queued: ((now: number) => void)[] = [];
+    const cap: { cb?: (records: { target: Element; isIntersecting: boolean }[]) => void } = {};
+    const registry = createVisibilityRegistry((cb) => { cap.cb = cb; return { observe: vi.fn(), unobserve: vi.fn() }; });
+    const s = createScheduler({ raf: (cb) => { queued.push(cb); }, observe: registry.observe, onError: vi.fn() });
+    const flush = (now: number) => { const q = queued; queued = []; q.forEach((cb) => cb(now)); };
+    const show = (el: Element) => cap.cb?.([{ target: el, isIntersecting: true }]);
+    return { s, flush, show };
+  }
+
+  it('a second stop() is a no-op', () => {
+    const { s } = wired();
+    const handle = s.register({ el: {} as Element, frame: () => {} });
+    handle.stop();
+    expect(() => handle.stop()).not.toThrow();
+  });
+
+  it('stop() after the scheduler removed a failed animation does not throw', () => {
+    const { s, flush, show } = wired();
+    const el = {} as Element;
+    const frame = vi.fn(() => { throw new Error('boom'); });
+    const handle = s.register({ el, frame });
+    show(el);
+    flush(1000);
+    expect(frame).toHaveBeenCalledTimes(1);
+    expect(() => handle.stop()).not.toThrow();
+  });
+
+  it('a registry unsubscribe called twice does not throw', () => {
+    const registry = createVisibilityRegistry(() => ({ observe: vi.fn(), unobserve: vi.fn() }));
+    const off = registry.observe({} as Element, () => {});
+    off();
+    expect(() => off()).not.toThrow();
+  });
+});
+
 describe('visibility registry', () => {
   it('two callbacks on one element both receive updates', () => {
     const cap: { cb?: (records: { target: Element; isIntersecting: boolean }[]) => void } = {};

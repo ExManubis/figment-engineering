@@ -35,8 +35,8 @@ export function createScheduler(deps: SchedulerDeps) {
   let running = false;
 
   const remove = (e: Entry) => {
+    if (!entries.delete(e)) return; // already stopped (or removed after a failure)
     e.unobserve();
-    entries.delete(e);
   };
 
   const tick = (now: number) => {
@@ -101,8 +101,10 @@ export function createVisibilityRegistry(
       }
 
       return () => {
-        callbacks.get(el)!.delete(cb);
-        if (callbacks.get(el)!.size === 0) {
+        const set = callbacks.get(el);
+        if (!set) return;
+        set.delete(cb);
+        if (set.size === 0) {
           callbacks.delete(el);
           lastKnownVisibility.delete(el);
           observer.unobserve(el);

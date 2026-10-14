@@ -31,6 +31,7 @@ export function mountClaudewitzDemo(root: HTMLElement): void {
     reportError(err);
     term.textContent = TRANSCRIPT;
     canvas.hidden = true;
+    if (replay) replay.disabled = true;
     io?.disconnect();
     handle?.stop();
     handle = undefined;
@@ -44,6 +45,7 @@ export function mountClaudewitzDemo(root: HTMLElement): void {
 
     if (prefersReducedMotion()) {
       term.textContent = TRANSCRIPT;
+      if (replay) replay.disabled = true; // nothing to replay
       paintCells(ctx, spec, field.cells());
       return;
     }

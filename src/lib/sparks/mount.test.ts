@@ -30,11 +30,11 @@ class FakeIO {
 function fakeRoot() {
   const term = { textContent: '' };
   const canvas = { hidden: false, style: {} as Record<string, string> };
-  const replay = { addEventListener: vi.fn() };
+  const replay = { addEventListener: vi.fn(), disabled: false };
   const root = {
     querySelector: (sel: string) => (sel === '[data-terminal]' ? term : sel === '[data-bean]' ? canvas : sel === '[data-replay]' ? replay : null),
   } as unknown as HTMLElement;
-  return { root, term, canvas };
+  return { root, term, canvas, replay };
 }
 
 beforeEach(() => {
@@ -50,8 +50,9 @@ describe('mountClaudewitzDemo', () => {
     const stop = vi.fn();
     m.register.mockReturnValue({ stop });
     vi.spyOn(performance, 'now').mockReturnValue(1000);
-    const { root, term, canvas } = fakeRoot();
+    const { root, term, canvas, replay } = fakeRoot();
     mountClaudewitzDemo(root);
+    expect(replay.disabled).toBe(false);
     io.instances[0].cb([{ intersectionRatio: 1 }]); // start; restart's paint succeeds
     m.paintCells.mockImplementation(() => { throw new Error('boom'); });
     const anim = m.register.mock.calls[0][0] as { frame: (now: number) => void };
@@ -61,12 +62,14 @@ describe('mountClaudewitzDemo', () => {
     expect(canvas.hidden).toBe(true);
     expect(stop).toHaveBeenCalledTimes(1);
     expect(io.instances[0].disconnect).toHaveBeenCalled();
+    expect(replay.disabled).toBe(true);
   });
 
   it('on a setup failure reports, shows the transcript and never registers', () => {
     m.setupCanvas.mockImplementation(() => { throw new Error('no ctx'); });
-    const { root, term, canvas } = fakeRoot();
+    const { root, term, canvas, replay } = fakeRoot();
     expect(() => mountClaudewitzDemo(root)).not.toThrow();
+    expect(replay.disabled).toBe(true);
     expect(m.reportError).toHaveBeenCalledTimes(1);
     expect(term.textContent).toBe(TRANSCRIPT);
     expect(canvas.hidden).toBe(true);
@@ -75,9 +78,10 @@ describe('mountClaudewitzDemo', () => {
 
   it('under reduced motion shows the transcript, paints once and never registers', () => {
     m.prefersReducedMotion.mockReturnValue(true);
-    const { root, term } = fakeRoot();
+    const { root, term, replay } = fakeRoot();
     mountClaudewitzDemo(root);
     expect(term.textContent).toBe(TRANSCRIPT);
+    expect(replay.disabled).toBe(true);
     expect(m.paintCells).toHaveBeenCalledTimes(1);
     expect(m.register).not.toHaveBeenCalled();
   });
