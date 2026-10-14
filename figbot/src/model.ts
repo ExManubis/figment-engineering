@@ -132,3 +132,44 @@ export function gridFor(width: number, height: number): { cols: number; rows: nu
   const cell = w / GRID, rows = Math.ceil(h / cell);
   return { cols: GRID, rows, cell, frame: { x0: 0, y0: rows - GRID, size: GRID } };
 }
+
+export type ExpressionName = 'idle' | 'curious' | 'happy' | 'excited' | 'thinking' | 'sleepy' | 'worried';
+
+/** Sheet order; the live page maps keys 1–7 onto it. */
+export const EXPRESSIONS: readonly ExpressionName[] = ['idle', 'curious', 'happy', 'excited', 'thinking', 'sleepy', 'worried'];
+
+const eye = (o: Partial<EyePose> = {}): EyePose => ({ ...DEFAULT_EYE, ...o });
+const pose = (o: Partial<Pose>): Pose => ({ ...DEFAULT_POSE, ...o });
+
+export const POSES: Record<ExpressionName, Pose> = {
+  idle: pose({}),
+  curious: pose({ tilt: 0.2, gx: 0.035, gy: -0.03, eyes: [eye({ scale: 0.86, lid: 0.12 }), eye({ scale: 1.16 })] }),
+  happy: pose({ shape: 'arc', squash: 0.05, bob: -0.02 }),
+  excited: pose({ shape: 'chevron', squash: 0.07, bob: -0.03, tilt: -0.08 }),
+  thinking: pose({ tilt: -0.1, gx: 0.04, gy: -0.06, glint: false, eyes: [eye({ scale: 0.95, low: 0.38 }), eye({ scale: 0.95, low: 0.38 })] }),
+  sleepy: pose({ tilt: 0.24, gy: 0.025, glint: false, exposure: 0.7, bob: 0.02, eyes: [eye({ lid: 0.72 }), eye({ lid: 0.66 })] }),
+  worried: pose({ gx: -0.02, gy: 0.03, squash: 0.03, eyes: [eye({ scale: 0.92, lid: 0.3, slant: 1.4 }), eye({ scale: 0.92, lid: 0.3, slant: 1.4 })] }),
+};
+
+// a·(1−k) + b·k is exact at both ends, unlike a + (b − a)·k
+const mix = (a: number, b: number, k: number) => a * (1 - k) + b * k;
+const lerpEye = (a: EyePose, b: EyePose, k: number): EyePose => ({
+  scale: mix(a.scale, b.scale, k), sx: mix(a.sx, b.sx, k), lid: mix(a.lid, b.lid, k), low: mix(a.low, b.low, k), slant: mix(a.slant, b.slant, k),
+});
+
+/** Blend two poses. Numbers interpolate; shape and glint switch at k = 0.5. */
+export function lerp(a: Pose, b: Pose, k: number): Pose {
+  const late = k >= 0.5;
+  return {
+    shape: late ? b.shape : a.shape,
+    open: mix(a.open, b.open, k),
+    gx: mix(a.gx, b.gx, k),
+    gy: mix(a.gy, b.gy, k),
+    tilt: mix(a.tilt, b.tilt, k),
+    squash: mix(a.squash, b.squash, k),
+    bob: mix(a.bob, b.bob, k),
+    glint: late ? b.glint : a.glint,
+    exposure: mix(a.exposure, b.exposure, k),
+    eyes: [lerpEye(a.eyes[0], b.eyes[0], k), lerpEye(a.eyes[1], b.eyes[1], k)],
+  };
+}

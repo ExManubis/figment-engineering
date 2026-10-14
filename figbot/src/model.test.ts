@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BG, DEFAULT_EYE, DEFAULT_POSE, HOLE, cells, gridFor, sample, type EyePose, type Pose } from './model';
+import { BG, DEFAULT_EYE, DEFAULT_POSE, EXPRESSIONS, GRID, HOLE, POSES, cells, gridFor, lerp, sample, type EyePose, type Pose } from './model';
 
 // Left eye sits at (0.37, 0.45), base radii rx 0.105, ry 0.16; its inner side is +x.
 const pose = (o: Partial<Pose>): Pose => ({ ...DEFAULT_POSE, ...o });
@@ -101,5 +101,61 @@ describe('gridFor', () => {
     expect(g.cols).toBeGreaterThanOrEqual(1);
     expect(g.rows).toBeGreaterThanOrEqual(1);
     expect(Number.isFinite(g.cell)).toBe(true);
+  });
+});
+
+
+describe('expressions', () => {
+  it('lists the seven expressions in sheet order', () => {
+    expect(EXPRESSIONS).toEqual(['idle', 'curious', 'happy', 'excited', 'thinking', 'sleepy', 'worried']);
+  });
+
+  const holes = (c: Float64Array) => c.reduce((n, l) => n + (l === HOLE ? 1 : 0), 0);
+
+  it.each(EXPRESSIONS)('%s shows its eyes', (name) => {
+    expect(holes(cells(POSES[name], GRID, GRID))).toBeGreaterThanOrEqual(10);
+  });
+
+  it('every pair of expressions differs clearly', () => {
+    const grids = EXPRESSIONS.map(n => cells(POSES[n], GRID, GRID));
+    for (let a = 0; a < grids.length; a++) {
+      for (let b = a + 1; b < grids.length; b++) {
+        let diff = 0;
+        for (let i = 0; i < grids[a].length; i++) if ((grids[a][i] === HOLE) !== (grids[b][i] === HOLE)) diff++;
+        expect(diff, `${EXPRESSIONS[a]} vs ${EXPRESSIONS[b]}`).toBeGreaterThanOrEqual(20);
+      }
+    }
+  });
+
+  it('uses the eye shape each expression is defined by', () => {
+    expect(POSES.happy.shape).toBe('arc');
+    expect(POSES.excited.shape).toBe('chevron');
+    for (const n of ['idle', 'curious', 'thinking', 'sleepy', 'worried'] as const) expect(POSES[n].shape).toBe('oval');
+  });
+});
+
+describe('lerp', () => {
+  it('returns a at 0 and b at 1 exactly', () => {
+    expect(lerp(POSES.idle, POSES.sleepy, 0)).toEqual(POSES.idle);
+    expect(lerp(POSES.idle, POSES.sleepy, 1)).toEqual(POSES.sleepy);
+  });
+
+  it('blends numbers, including per-eye fields', () => {
+    const p = lerp(POSES.idle, POSES.sleepy, 0.5);
+    expect(p.tilt).toBeCloseTo(0.12, 10);
+    expect(p.eyes[0].lid).toBeCloseTo(0.36, 10);
+  });
+
+  it('switches shape and glint at the halfway point', () => {
+    expect(lerp(POSES.idle, POSES.happy, 0.49).shape).toBe('oval');
+    expect(lerp(POSES.idle, POSES.happy, 0.5).shape).toBe('arc');
+    expect(lerp(POSES.idle, POSES.sleepy, 0.49).glint).toBe(true);
+    expect(lerp(POSES.idle, POSES.sleepy, 0.5).glint).toBe(false);
+  });
+
+  it('never mutates its inputs', () => {
+    const before = structuredClone(POSES.idle);
+    lerp(POSES.idle, POSES.happy, 0.3).eyes[0].lid = 9;
+    expect(POSES.idle).toEqual(before);
   });
 });
