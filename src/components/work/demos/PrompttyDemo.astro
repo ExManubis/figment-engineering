@@ -1,0 +1,115 @@
+---
+import { frameAt, PANE, STILL_MS, TABS } from '../../../lib/agents/timeline';
+
+// the server renders the still frame (claude waiting on you); the script moves it on from there
+const still = frameAt(STILL_MS);
+const groups = [...new Set(TABS.map((t) => t.project))];
+const stateOf = (id: string) => still.tabs.find((t) => t.id === id)!;
+---
+
+<div data-promptty-demo>
+	<button type="button" class="window" data-replay aria-label="Replay the PrompTTY agents demo">
+		<span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+		<span class="sidebar" aria-hidden="true">
+			{groups.map((project) => (
+				<>
+					<span class="project">{project}</span>
+					{TABS.filter((t) => t.project === project).map((t) => (
+						<span class="tab" data-tab={t.id} data-state={stateOf(t.id).state ?? ''} data-selected={t.id === 'claude' ? '' : undefined}>
+							<span class="dot"></span>{t.name}
+							{t.steps && <span class="status" data-status>{stateOf(t.id).detail}</span>}
+						</span>
+					))}
+				</>
+			))}
+		</span>
+		<span class="pane" aria-hidden="true">
+			<span class="card">
+				{PANE.map((l, i) => <span class="line" data-line data-tone={l.tone} hidden={i >= still.pane.length}>{l.text}</span>)}
+			</span>
+		</span>
+		<span class="toast" data-toast data-show={String(still.toast)} aria-hidden="true">
+			<span class="toast-title">claude needs permission</span>figment-engineering · Bash
+		</span>
+	</button>
+</div>
+
+<script>
+	import { mountPrompttyDemo } from '../../../lib/agents/mount';
+	import { reportError } from '../../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-promptty-demo]').forEach((el) => {
+		try { mountPrompttyDemo(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	/* PrompTTY's own window: Flexoki dark surfaces, drawn in the site's mono */
+	.window {
+		position: relative;
+		display: grid;
+		grid-template-columns: 190px minmax(0, 1fr);
+		width: 100%;
+		height: 300px;
+		padding: 0;
+		border: 1px solid #343331;
+		border-radius: 10px;
+		overflow: hidden;
+		background: #100F0F;
+		color: #CECDC3;
+		font: inherit;
+		font-size: 12px;
+		line-height: 1.6;
+		text-align: left;
+		cursor: pointer;
+	}
+	.window:hover:not(:disabled) { border-color: #575653; }
+	.window:disabled { cursor: default; }
+
+	.lights { position: absolute; top: 10px; left: 12px; display: flex; gap: 6px; }
+	.lights i { width: 9px; height: 9px; border-radius: 50%; background: #343331; }
+
+	.sidebar { display: block; padding: 30px 8px 8px; background: #1C1B1A; overflow: hidden; }
+	.project { display: block; margin: 8px 6px 2px; color: #575653; }
+	.tab { display: block; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+	.tab[data-selected] { background: #282726; }
+	.dot { display: inline-block; width: 7px; height: 7px; margin-right: 1ch; border-radius: 50%; border: 1px solid #575653; vertical-align: 1px; }
+	.tab[data-state='working'] .dot { background: #4385BE; border-color: #4385BE; }
+	.tab[data-state='permission'] .dot { background: #D0A215; border-color: #D0A215; }
+	.tab[data-state='done'] .dot { background: #879A39; border-color: #879A39; }
+	.status { display: block; padding-left: calc(7px + 1ch); overflow: hidden; text-overflow: ellipsis; color: #878580; }
+	.tab[data-state='permission'] .status { color: #D0A215; }
+
+	.pane { display: block; padding: 8px; min-width: 0; }
+	.card { display: block; height: 100%; padding: 12px 14px; border-radius: 8px; background: #1C1B1A; overflow: hidden; }
+	.line { display: block; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+	.line[hidden] { display: none; }
+	.line[data-tone='add'] { color: #879A39; }
+	.line[data-tone='del'] { color: #D14D41; }
+	.line[data-tone='warn'] { color: #D0A215; }
+	.line[data-tone='muted'] { color: #878580; }
+
+	.toast {
+		position: absolute;
+		top: 10px;
+		right: 12px;
+		display: block;
+		padding: 6px 10px;
+		border-radius: 8px;
+		background: #282726;
+		box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+		transition: opacity 0.3s, transform 0.3s;
+	}
+	.toast[data-show='false'] { opacity: 0; transform: translateY(-6px); }
+	.toast-title { display: block; color: #D0A215; }
+
+	/* phones: the sidebar carries the story, the pane goes; the notification moves below the tabs */
+	@media (max-width: 639px) {
+		.window { grid-template-columns: minmax(0, 1fr); }
+		.pane { display: none; }
+		.toast { top: auto; bottom: 10px; }
+		.toast[data-show='false'] { transform: translateY(6px); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.toast { transition: none; }
+	}
+</style>

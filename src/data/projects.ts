@@ -1,4 +1,4 @@
-export type DemoId = 'claudewitz';
+export type DemoId = 'claudewitz' | 'promptty';
 
 export interface ProjectLink {
   label: string;
@@ -19,6 +19,10 @@ export interface Project {
   /** 3–4 short lines */
   features: string[];
   links: ProjectLink[];
+  /** cga: the header redrawn in the style of the project's logo; default ANSI Shadow in the brand gradient */
+  header?: 'cga';
+  /** short muted line beside the links, e.g. system requirements */
+  note?: string;
   demo: DemoId;
 }
 
@@ -39,6 +43,25 @@ export const projects: Project[] = [
       { label: '$ brew install exmanubis/tap/claudewitz', copy: 'brew install exmanubis/tap/claudewitz', event: 'install_command_copied' },
     ],
     demo: 'claudewitz',
+  },
+  {
+    id: 'promptty',
+    name: 'PrompTTY',
+    brand: { primary: '#00AAAA', gradient: ['#00AAAA', '#55FFFF'] },
+    description: 'A native macOS terminal for working alongside coding agents, built on libghostty.',
+    features: [
+      'Spots Claude Code, Codex, Amp and others in any pane, and shows whether each is working, waiting or done.',
+      'Notifies you the moment an agent needs your permission.',
+      'In zsh, an input bar replaces the prompt, with history, suggestions and fuzzy search.',
+      'Every command is a block you can jump to, copy or rerun.',
+    ],
+    links: [
+      { label: 'GitHub', href: 'https://github.com/ExManubis/promptty' },
+      { label: 'Download for macOS', href: 'https://github.com/ExManubis/promptty/releases/latest' },
+    ],
+    header: 'cga',
+    note: 'Apple silicon · macOS 26',
+    demo: 'promptty',
   },
 ];
 

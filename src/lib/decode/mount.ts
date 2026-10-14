@@ -49,7 +49,7 @@ function mountOne(el: HTMLElement): void {
     layout = layoutFrame(el.clientWidth / cw, el.clientHeight / LINE_PX, label, rng);
     for (const h of headers) {
       h.el.textContent = h.text;
-      fitPre(h.el, HEADER_MAX_PX);
+      fitPre(h.el, Number(h.el.dataset.maxPx) || HEADER_MAX_PX);
       h.seeds = makeTextSeeds(h.text, rng, FRAME_BAND);
     }
     lastP = -1;

@@ -1,13 +1,24 @@
 ---
-import { ansiShadow } from '../../lib/type/figlet';
+import { cgaArt, cgaPaint } from '../../lib/type/cga';
+import { ansiShadow, ansiShadowSpaced } from '../../lib/type/figlet';
 
-interface Props { text: string }
-const art = ansiShadow(Astro.props.text);
+interface Props {
+	text: string;
+	/** cga: redrawn in the style of PrompTTY's logo, in its colours */
+	variant?: 'cga';
+}
+const { text, variant } = Astro.props;
+// the CGA art outlines each letter, so its letters are set a column apart to keep the outlines from merging
+const cga = variant === 'cga' ? cgaArt(ansiShadowSpaced(text, 1)) : null;
+const art = cga?.text ?? ansiShadow(text);
 // widest line in characters, so a brand gradient can span the lettering rather than the whole box
-const cols = Math.max(...art.split('\n').map((l) => l.trimEnd().length));
+const cols = cga?.cols ?? Math.max(...art.split('\n').map((l) => l.trimEnd().length));
+// the CGA art has about twice the columns, so it tops out at half the size to match the other headers' width
+const maxPx = cga ? 7 : undefined;
+const style = [`--cols: ${cols}`, cga && `--header-paint: url("${cgaPaint(cga)}")`, maxPx && `font-size: ${maxPx}px`].filter(Boolean).join('; ');
 ---
 
-<pre class="ascii-header" data-ascii-header aria-hidden="true" style={`--cols: ${cols}`}>{art}</pre>
+<pre class="ascii-header" data-ascii-header data-max-px={maxPx} data-paint={cga ? '' : undefined} aria-hidden="true" style={style}>{art}</pre>
 
 <style>
 	.ascii-header {
