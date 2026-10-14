@@ -34,6 +34,7 @@ import { SITE, personJsonLd } from '../lib/seo';
 		<script type="application/ld+json" set:html={JSON.stringify(personJsonLd())} />
 	</head>
 	<body class="bg-bg text-fg">
+		<div class="dot-texture" aria-hidden="true"></div>
 		<slot />
 		<canvas class="pointer-events-none fixed top-0 left-0 z-[60]" data-trail aria-hidden="true"></canvas>
 		<script>

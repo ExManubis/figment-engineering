@@ -47,4 +47,21 @@
   /* an animation that failed: hide its canvas, show the static fallback */
   [data-fallback] canvas { display: none !important; }
   .js [data-fallback] .js-hide { display: block !important; }
+
+  /*
+   * A faint dot grid behind the page, fixed to the viewport on the cursor trail's grid (CELL in lib/trail/trail.ts),
+   * so trail dots light up dots that were already there. Clear in the middle, fading in toward the edges.
+   * The body is isolated so the texture paints above the body's background and below everything else.
+   */
+  body { isolation: isolate; }
+  .dot-texture {
+    --dot-cell: 10px;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(circle at calc(var(--dot-cell) / 2) calc(var(--dot-cell) / 2), rgb(237 237 237 / 0.07) 1px, transparent 1.6px);
+    background-size: var(--dot-cell) var(--dot-cell);
+    mask-image: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 35%, black 100%);
+  }
 }
