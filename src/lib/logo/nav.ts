@@ -35,8 +35,11 @@ export function navLogoCells(t: number): (DotCell | undefined)[] {
 /** Mounts the animated logo. Any failure is reported and leaves the static favicon fallback showing. */
 export function mountNavLogo(canvas: HTMLCanvasElement): void {
   let stopped = false;
+  let failed = false;
   let handle: { stop(): void } | undefined;
   const fail = (err: unknown): void => {
+    if (failed) return;
+    failed = true;
     reportError(err);
     canvas.closest('[data-nav-logo-link]')?.setAttribute('data-fallback', '');
     if (handle && !stopped) { stopped = true; handle.stop(); }
