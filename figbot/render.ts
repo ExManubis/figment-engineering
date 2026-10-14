@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Resvg } from '@resvg/resvg-js';
+import { build } from 'esbuild';
 import { EXPRESSIONS, GRID, POSES, cells, type Pose } from './src/model';
 import { BG_COLOR, FG_COLOR, svgBody, toSvg } from './src/svg';
 import { FPS, LOOP, poseAt } from './src/timeline';
@@ -56,5 +57,22 @@ try {
 } finally {
   rmSync(frames, { recursive: true, force: true });
 }
+
+// live page: one self-contained HTML file
+const js = await build({ entryPoints: ['figbot/src/live.ts'], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020' });
+writeFileSync(`${OUT}/live.html`, `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>figbot</title>
+<style>html,body{margin:0;height:100%;background:${BG_COLOR};overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style>
+</head>
+<body>
+<canvas aria-label="Figbot, a halftone mascot. Press 1 to 7 to change its expression, 0 to resume." role="img"></canvas>
+<script>${js.outputFiles[0].text}</script>
+</body>
+</html>
+`);
 
 console.log('figbot/out written');
