@@ -43,4 +43,7 @@
   .link:hover, .link:focus-visible { color: var(--color-fg); }
   .js .js-hide { display: none; }
   html:not(.js) .no-js-hide { display: none; }
+  /* an animation that failed: hide its canvas, show the static fallback */
+  [data-fallback] canvas { display: none; }
+  .js [data-fallback] .js-hide { display: block; }
 }

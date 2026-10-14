@@ -1,6 +1,8 @@
 <header class="fixed inset-x-0 top-0 z-50 bg-bg/90 backdrop-blur-sm">
 	<nav aria-label="Main" class="label mx-auto flex h-20 max-w-[1200px] items-center justify-between px-6">
-		<a href="#top" class="flex items-center gap-3 text-fg no-underline">
+		<a href="#top" data-nav-logo-link class="flex items-center gap-3 text-fg no-underline">
+			<canvas class="no-js-hide size-14" data-nav-logo aria-hidden="true"></canvas>
+			<img class="js-hide size-14" src="/favicon.svg" alt="" width="56" height="56" />
 			<span class="max-[480px]:sr-only">Pixel Perfection</span>
 		</a>
 		<ul class="flex gap-6 sm:gap-8">
@@ -10,3 +12,12 @@
 		</ul>
 	</nav>
 </header>
+
+<script>
+	import { mountNavLogo } from '../../lib/logo/nav';
+	import { reportError } from '../../lib/report';
+	const canvas = document.querySelector<HTMLCanvasElement>('[data-nav-logo]');
+	if (canvas) {
+		try { mountNavLogo(canvas); } catch (err) { reportError(err); }
+	}
+</script>
