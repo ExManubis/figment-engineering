@@ -21,3 +21,9 @@ import { projects } from '../data/projects';
 	</main>
 	<Footer />
 </Layout>
+
+<script>
+	import { mountScrollLock } from '../lib/scroll/mount';
+	import { reportError } from '../lib/report';
+	try { mountScrollLock(); } catch (err) { reportError(err); }
+</script>
