@@ -34,7 +34,7 @@ export function mountWallpapers(root: HTMLElement): void {
     for (const img of previews) {
       if (img.dataset.for !== device) continue;
       img.src = previewPath(w.id, device);
-      img.alt = `${w.name} wallpaper for ${d.label}`;
+      img.alt = `${w.name} wallpaper for ${d.model}`;
     }
     download.href = downloadPath(w.id, device);
     download.setAttribute('download', `figment-${w.id}-${device}.png`);

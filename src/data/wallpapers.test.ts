@@ -17,8 +17,10 @@ describe('wallpapers', () => {
     expect(thumbPath('cw-bean')).toBe('/wallpapers/thumb/cw-bean.png');
   });
 
-  it('has Mac, iPad and iPhone at their native sizes', () => {
-    expect(DEVICES.map((d) => [d.id, d.width, d.height])).toEqual([['mac', 5120, 2880], ['ipad', 2752, 2064], ['iphone', 1320, 2868]]);
+  it('has Mac, MacBook Pro 16″, iPad and iPhone at their native sizes', () => {
+    expect(DEVICES.map((d) => [d.id, d.width, d.height])).toEqual([
+      ['mac', 5120, 2880], ['macbook', 3456, 2234], ['ipad', 2752, 2064], ['iphone', 1320, 2868],
+    ]);
   });
 
   it('formats file sizes like ls -h', () => {
