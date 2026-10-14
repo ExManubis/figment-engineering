@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>F3 · A vs B — detailed + nav</title>
+<style>
+  @font-face { font-family:'Departure Mono'; src:url('DepartureMono.woff2') format('woff2'); }
+  * { box-sizing:border-box; margin:0; }
+  body { background:#050505; color:#ddd; font-family:'Departure Mono',monospace; padding:32px 40px 60px; }
+  .intro h1 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; }
+  .intro p { color:#777; font-size:13px; margin:10px 0 22px; max-width:1040px; line-height:1.7; }
+  .intro b { color:#ddd; font-weight:400; }
+  .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+  .opt { cursor:pointer; outline:1px solid #1a1a1a; background:#0A0A0A; transition:outline-color .2s; min-width:0; }
+  .opt.selected { outline:2px solid #fff; }
+  .hero { display:flex; justify-content:center; padding:18px 0 6px; }
+  .k { padding:12px 18px 14px; border-top:1px solid #141414; }
+  .k h3 { font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; color:#ddd; }
+  .k p { font-size:11.5px; color:#666; margin-top:6px; line-height:1.55; }
+  .navmock { display:flex; align-items:center; justify-content:space-between; height:64px; padding:0 22px; border-top:1px solid #141414; background:#0A0A0A; }
+  .brand { display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#EDEDED; }
+  .links { display:flex; gap:22px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#7A7A7A; }
+  .zoom { display:flex; align-items:center; gap:18px; padding:14px 22px 18px; border-top:1px solid #141414; font-size:11px; color:#555; line-height:1.5; }
+  .zoom canvas { image-rendering:pixelated; border:1px solid #1c1c1c; background:#0A0A0A; }
+</style>
+</head>
+<body>
+  <div class="intro">
+    <h1>F3 · A vs B — refined, with navbar versions</h1>
+    <p>
+      <b>Both rebuilt on a canvas, so every dot sits exactly on the grid.</b> What's new in both: edges are anti-aliased with smaller dots where the shape only partly covers a cell; continuous grey shading instead of three steps;
+      a background grid that fades out at the edges; and a <b>focus lock</b> every 7 seconds, where the brackets tighten and the pixel turns square to you while the frame keeps rotating, then lets go.
+      Below each is the navbar version at actual size, with a zoomed copy to inspect the pixels. The nav logo is a simplified flat version that sways gently and locks on the same beat as the large one.
+    </p>
+  </div>
+  <div class="grid">
+    <div class="opt" data-choice="A" onclick="toggleSelect(this)">
+      <div class="hero"><canvas id="heroA"></canvas></div>
+      <div class="k"><h3>A · Ray-traced dots</h3><p>v2: larger pixel, and the brackets hold still (no tightening) while the pixel locks square. A solid model with a key light and a rim light; the arms are real 3D bars and the pixel has softly bevelled corners that glint as it turns.</p></div>
+      <div class="navmock"><div class="brand"><canvas id="navA"></canvas>Pixel Perfection</div><div class="links"><span>Work</span><span>About</span><span>Contact</span></div></div>
+      <div class="zoom"><canvas id="zoomA"></canvas><span>Nav logo, 56 px on a 28×28 grid (still 2 px cells), shown at 3× zoom.<br>The brackets are fixed and pixel-sharp; they glow from grey to white when focus locks. The pixel tumbles in 3D and turns square on the lock.</span></div>
+    </div>
+    <div class="opt" data-choice="B" onclick="toggleSelect(this)">
+      <div class="hero"><canvas id="heroB"></canvas></div>
+      <div class="k"><h3>B · Vector dots, lit by depth</h3><p>The geometry is drawn as exact one-dot lines. Each arm fades from a bright corner towards its tip, and brightness follows depth. The pixel is solid with crisp silhouette edges, and arms behind it are properly hidden. Feels like a technical drawing.</p></div>
+      <div class="navmock"><div class="brand"><canvas id="navB"></canvas>Pixel Perfection</div><div class="links"><span>Work</span><span>About</span><span>Contact</span></div></div>
+      <div class="zoom"><canvas id="zoomB"></canvas><span>Nav logo, 28 px on a 14×14 grid, shown at 6× zoom.<br>Same flattened version as A, drawn as one-pixel lines.</span></div>
+    </div>
+  </div>
+
+<script>
+window.toggleSelect = el => el.classList.toggle('selected');
+// ================= quaternions =================
+const qMul = (a, b) => [a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3], a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2], a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1], a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];
+const qConj = q => [q[0], -q[1], -q[2], -q[3]];
+const qAxis = (ax, ang) => { const l = Math.hypot(...ax), s = Math.sin(ang / 2) / l; return [Math.cos(ang / 2), ax[0] * s, ax[1] * s, ax[2] * s]; };
+function qRot(q, v) { const p = qMul(qMul(q, [0, v[0], v[1], v[2]]), qConj(q)); return [p[1], p[2], p[3]]; }
+function qSlerp(a, b, t) {
+  let d = a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]; if (d < 0) { b = b.map(x => -x); d = -d; }
+  if (d > 0.9995) { const r = a.map((x, i) => x + (b[i] - x) * t); const l = Math.hypot(...r); return r.map(x => x / l); }
+  const th = Math.acos(d), s = Math.sin(th);
+  return a.map((x, i) => (x * Math.sin((1 - t) * th) + b[i] * Math.sin(t * th)) / s);
+}
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+
+// ================= shared choreography =================
+function pose(t, k = 1, flat = false, tighten = true) {
+  // k slows the turning (nav logo); the focus lock stays on the same 7 s beat
+  const qCam = flat
+    ? qMul(qAxis([0, 1, 0], Math.sin(t * 0.5) * 0.5), qAxis([1, 0, 0], -0.18 + Math.sin(t * 0.31) * 0.1)) // sway, never edge-on
+    // a quarter turn per 7 s cycle: the frame is symmetric, so every focus lock lands on the same three-quarter view
+    : qMul(qAxis([0, 1, 0], Math.PI / 4 + (t - 4.85) * (Math.PI / 2) / 7), qAxis([1, 0, 0], -0.5 + Math.sin((t - 4.85) * 2 * Math.PI / 7 + Math.PI / 2) * 0.14));
+  const c = t % 7;
+  const w = smooth((c - 3.6) / 0.7) * (1 - smooth((c - 6.1) / 0.7)); // focus lock weight
+  const qTumble = qMul(qAxis([0.35, 1, 0.2], t * k * 1.05), qAxis([1, 0, 0], 0.6));
+  const qCube = qSlerp(qTumble, qConj(qCam), w);          // when locked: square to the viewer
+  const S = tighten ? 1 + 0.08 * (1 - w) : 1;               // brackets tighten on focus (off for the A hero)
+  return { qCam, qCube, S, w };
+}
+
+// ================= geometry params =================
+const HERO = { ARM: 0.38, TH: 0.026, CUBE: 0.27, BEVEL: 0.025, span: 1.92 };
+const HERO_A = { ...HERO, CUBE: 0.4, BEVEL: 0.03 };
+// nav: flattened to the four front brackets + the pixel, so it reads at 28 px
+const NAV  = { ARM: 0.5, TH: 0.08, CUBE: 0.34, BEVEL: 0.0, span: 1.32, flat: true };
+
+// ================= SDF (variant A) =================
+const len3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+function sdBox(x, y, z, bx, by, bz) { const qx = Math.abs(x) - bx, qy = Math.abs(y) - by, qz = Math.abs(z) - bz; return len3(Math.max(qx, 0), Math.max(qy, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qy, qz), 0); }
+function makeSDF(G, P) {
+  const qi = qConj(P.qCube), S = P.S, A = G.ARM, T = G.TH, C = G.CUBE - G.BEVEL;
+  return (x, y, z) => {
+    const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+    const arms = G.noArms ? Infinity : G.flat ? Math.min(
+      sdBox(ax - (S - A / 2), ay - S, z, A / 2, T, T),
+      sdBox(ax - S, ay - (S - A / 2), z, T, A / 2, T)) : Math.min(
+      sdBox(ax - (S - A / 2), ay - S, az - S, A / 2, T, T),
+      sdBox(ax - S, ay - (S - A / 2), az - S, T, A / 2, T),
+      sdBox(ax - S, ay - S, az - (S - A / 2), T, T, A / 2));
+    const p = qRot(qi, [x, y, z]);
+    return Math.min(arms, sdBox(p[0], p[1], p[2], C, C, C) - G.BEVEL);
+  };
+}
+
+// lighting: key + rim, in world space
+const KEY = (() => { const l = Math.hypot(-0.5, 0.75, -0.45); return [-0.5 / l, 0.75 / l, -0.45 / l]; })();
+const shade = n => clamp(0.1 + 0.9 * Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]) + 0.28 * Math.pow(1 - Math.abs(n[2]), 2.2));
+
+// ================= canvas grid painter =================
+function setupCanvas(cv, cssW, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+  cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return ctx;
+}
+const grey = v => { const g = Math.round(28 + Math.pow(clamp(v), 0.85) * 214); return `rgb(${g},${g},${g})`; };
+function paint(ctx, R, cells) {
+  const { W, H, cs, square, bg } = R;
+  ctx.fillStyle = '#0A0A0A'; ctx.fillRect(0, 0, W * cs, H * cs);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const c = cells[j * W + i], x = (i + 0.5) * cs, y = (j + 0.5) * cs;
+    if (!c || c.cov <= 0.02) {
+      if (bg) { const dx = (i - W / 2) / (W / 2), dy = (j - H / 2) / (H / 2), f = clamp(1 - Math.hypot(dx * 0.9, dy) * 0.75); if (f > 0.05) { ctx.fillStyle = `rgba(255,255,255,${0.1 * f})`; ctx.beginPath(); ctx.arc(x, y, cs * 0.11, 0, 6.2832); ctx.fill(); } }
+      continue;
+    }
+    ctx.fillStyle = grey(c.lum);
+    if (square) { const s = cs * (0.35 + 0.65 * c.cov); ctx.fillRect(x - s / 2, y - s / 2, s, s); }
+    else { ctx.beginPath(); ctx.arc(x, y, cs * (0.16 + 0.27 * c.cov) * (c.big || 1), 0, 6.2832); ctx.fill(); }
+  }
+}
+
+// ================= A: ray-traced =================
+function renderA(R, G, P) {
+  const { W, H } = R, sx = G.span / (W / 2), f = makeSDF(G, P);
+  const dir = qRot(qConj(P.qCam), [0, 0, 1]);
+  const cells = new Array(W * H);
+  const ss = R.ss || 1;
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    let cov = 0, lum = 0;
+    for (let sj = 0; sj < ss; sj++) for (let si = 0; si < ss; si++) {
+      const wx = (i - W / 2 + (si + 0.5) / ss) * sx, wy = -(j - H / 2 + (sj + 0.5) / ss) * sx;
+      const o = qRot(qConj(P.qCam), [wx, wy, -4]);
+      let t = 0, dmin = 1e9, tmin = 0, hit = false;
+      for (let k = 0; k < 72 && t < 8; k++) {
+        const d = f(o[0] + dir[0] * t, o[1] + dir[1] * t, o[2] + dir[2] * t);
+        if (d < dmin) { dmin = d; tmin = t; }
+        if (d < 0.0015) { hit = true; break; }
+        t += Math.max(d * 0.85, 0.002);
+      }
+      // cone-style coverage: near misses count as partial coverage (anti-aliasing)
+      const c = hit ? 1 : (ss > 1 ? 0 : clamp(0.5 - dmin / (sx * 0.9)));
+      if (c <= 0) continue;
+      const tt = hit ? t : tmin, px = o[0] + dir[0] * tt, py = o[1] + dir[1] * tt, pz = o[2] + dir[2] * tt, e = 0.0025;
+      const n = [f(px + e, py, pz) - f(px - e, py, pz), f(px, py + e, pz) - f(px, py - e, pz), f(px, py, pz + e) - f(px, py, pz - e)];
+      const nl = Math.hypot(...n) || 1;
+      lum += shade(qRot(P.qCam, n.map(v => v / nl))) * c; cov += c;
+    }
+    if (cov > 0) cells[j * W + i] = { cov: cov / (ss * ss), lum: lum / cov };
+  }
+  return cells;
+}
+
+// ================= A nav: shaded pixel + crisp bracket lines =================
+// At 56 px the ray-traced brackets blur into grey fuzz, so they are drawn as solid
+// two-cell lines with no anti-aliasing; only the pixel keeps its ray-traced shading.
+function renderNavA(R, G, P) {
+  const { W, H } = R, sx = G.span / (W / 2);
+  const cells = renderA(R, { ...G, noArms: true }, P);
+  const proj = v => { const w = qRot(P.qCam, v); return [W / 2 - 0.5 + w[0] / sx, H / 2 - 0.5 - w[1] / sx, w[2]]; };
+  // brackets are fixed to the screen grid (no sway, no tightening: on 2 px cells any movement
+  // can only jump a whole cell). The focus lock shows as brightness instead: dim grey at rest, white on lock.
+  const S = 1, A = G.ARM, T = G.LINE || 2;
+  const flat = v => [W / 2 - 0.5 + v[0] / sx, H / 2 - 0.5 - v[1] / sx, 0];
+  const glow = 0.5 + 0.45 * P.w;
+  const put = (i, j, lum) => { if (i >= 0 && j >= 0 && i < W && j < H) cells[j * W + i] = { cov: 1, lum }; };
+  for (const sx_ of [-1, 1]) for (const sy of [-1, 1]) {
+    const c = [sx_ * S, sy * S, 0];
+    for (const e of [[sx_ * (S - A), sy * S, 0], [sx_ * S, sy * (S - A), 0]]) {
+      const a = flat(c), b = flat(e), n = Math.max(1, Math.round(Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]))));
+      // thicken towards the inside of the bracket so the outer edge stays on the corner
+      const ox = sx_ > 0 ? -1 : 1, oy = sy > 0 ? 1 : -1;
+      for (let s = 0; s <= n; s++) {
+        const u = s / n, i = Math.round(a[0] + (b[0] - a[0]) * u), j = Math.round(a[1] + (b[1] - a[1]) * u);
+        const lum = glow;
+        for (let k = 0; k < T; k++) for (let m = 0; m < T; m++) put(i + ox * k, j + oy * m, lum);
+      }
+    }
+  }
+  return cells;
+}
+
+// ================= B: vector projection =================
+function renderB(R, G, P) {
+  const { W, H } = R, sx = G.span / (W / 2);
+  const cells = new Array(W * H), zb = new Float32Array(W * H).fill(Infinity);
+  const proj = v => { const w = qRot(P.qCam, v); return [W / 2 - 0.5 + w[0] / sx, H / 2 - 0.5 - w[1] / sx, w[2]]; };
+  const depthLum = z => clamp(0.95 - (z + 1.4) / 2.8 * 0.8);
+  const put = (i, j, z, cell) => { if (i < 0 || j < 0 || i >= W || j >= H) return; const k = j * W + i; if (z < zb[k]) { zb[k] = z; cells[k] = cell; } };
+
+  // the pixel (cube) first, so its depth hides arms behind it
+  const C = G.CUBE, V = [];
+  for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) V.push(qRot(P.qCube, [x * C, y * C, z * C]));
+  const vi = (x, y, z) => ((x + 1) / 2) * 4 + ((y + 1) / 2) * 2 + (z + 1) / 2;
+  const F = [[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1]],[[-1,-1,-1],[-1,-1,1],[-1,1,1],[-1,1,-1]],[[-1,1,-1],[-1,1,1],[1,1,1],[1,1,-1]],[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]],[[-1,-1,-1],[-1,1,-1],[1,1,-1],[1,-1,-1]]]
+    .map(f => f.map(([x, y, z]) => vi(x, y, z)));
+  const vis = [];
+  F.forEach((f, fi) => {
+    const w = f.map(k => qRot(P.qCam, V[k]));
+    const cx = w.reduce((s, p) => s + p[0], 0) / 4, cy = w.reduce((s, p) => s + p[1], 0) / 4, cz = w.reduce((s, p) => s + p[2], 0) / 4;
+    const cl = Math.hypot(cx, cy, cz); const n = [cx / cl, cy / cl, cz / cl]; // cube centred at origin: centre direction is the normal
+    vis[fi] = n[2] < -0.02;
+    if (!vis[fi]) return;
+    const pp = f.map(k => proj(V[k]));
+    const lum = shade(n);
+    // plane through 3 projected points for per-cell depth
+    const [a, b, c] = pp, ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const zAt = (x, y) => a[2] - (nx * (x - a[0]) + ny * (y - a[1])) / (nz || 1e-9);
+    const minX = Math.floor(Math.min(...pp.map(p => p[0]))), maxX = Math.ceil(Math.max(...pp.map(p => p[0])));
+    const minY = Math.floor(Math.min(...pp.map(p => p[1]))), maxY = Math.ceil(Math.max(...pp.map(p => p[1])));
+    for (let j = minY; j <= maxY; j++) for (let i = minX; i <= maxX; i++) {
+      let inside = true, sgn = 0;
+      for (let k = 0; k < 4; k++) { const p = pp[k], q = pp[(k + 1) % 4], cr = (q[0] - p[0]) * (j - p[1]) - (q[1] - p[1]) * (i - p[0]); if (cr !== 0) { if (!sgn) sgn = Math.sign(cr); else if (Math.sign(cr) !== sgn) { inside = false; break; } } }
+      if (inside) put(i, j, zAt(i, j), { cov: 1, lum: lum * 0.92 });
+    }
+  });
+  // crisp edges on the pixel: silhouette bright, inner visible edges a touch brighter than faces
+  const EDGES = new Map();
+  F.forEach((f, fi) => f.forEach((k, n) => { const a = Math.min(k, f[(n + 1) % 4]), b = Math.max(k, f[(n + 1) % 4]); const key = a + '-' + b; (EDGES.get(key) || EDGES.set(key, []).get(key)).push(fi); }));
+  for (const [key, fs] of EDGES) {
+    const nv = fs.filter(fi => vis[fi]).length; if (!nv) continue;
+    const [a, b] = key.split('-').map(Number);
+    line(proj(V[a]), proj(V[b]), (u, z) => ({ cov: 1, lum: nv === 1 ? 1 : 0.8 }), -0.02);
+  }
+  // crop-mark arms: bright at the corner, fading to the tip
+  const S = P.S, A = G.ARM;
+  for (const sx_ of [-1, 1]) for (const sy of [-1, 1]) for (const sz of (G.flat ? [0] : [-1, 1])) {
+    const c = [sx_ * S, sy * S, sz * S];
+    const ends = [[sx_ * (S - A), sy * S, sz * S], [sx_ * S, sy * (S - A), sz * S]];
+    if (!G.flat) ends.push([sx_ * S, sy * S, sz * (S - A)]);
+    for (const e of ends)
+      line(proj(c), proj(e), (u, z) => ({ cov: 1, lum: depthLum(z) * (1 - 0.45 * u), big: u === 0 ? 1.18 : 1 }), 0);
+  }
+  function line(A, B, cellAt, zBias) {
+    const n = Math.max(1, Math.round(Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1]))));
+    for (let s = 0; s <= n; s++) { const u = s / n; const z = A[2] + (B[2] - A[2]) * u; put(Math.round(A[0] + (B[0] - A[0]) * u), Math.round(A[1] + (B[1] - A[1]) * u), z + zBias, cellAt(u, z)); }
+  }
+  return cells;
+}
+
+// ================= mount =================
+const HERO_W = 560, HERO_H = 430, NAV_PX = 28, ZOOM = 6;
+function mount(id, render, opt = {}) {
+  const hero = { W: 124, H: 95, cs: HERO_W / 124, bg: true };
+  const navPx = opt.navPx || NAV_PX, navCells = opt.navCells || 14, zoom = opt.zoom || ZOOM;
+  const nav = { W: navCells, H: navCells, cs: navPx / navCells, square: true, ss: 3 };
+  const hctx = setupCanvas(document.getElementById('hero' + id), hero.W * hero.cs, hero.H * hero.cs);
+  const nctx = setupCanvas(document.getElementById('nav' + id), navPx, navPx);
+  const zcv = document.getElementById('zoom' + id), zctx = setupCanvas(zcv, navPx * zoom, navPx * zoom);
+  return t => {
+    const P = pose(t, 1, false, opt.tighten !== false);
+    paint(hctx, hero, render(hero, opt.hero || HERO, P));
+    const Pn = pose(t, 0.6, true);
+    paint(nctx, nav, (opt.navRender || render)(nav, opt.nav || NAV, Pn));
+    zctx.imageSmoothingEnabled = false;
+    zctx.clearRect(0, 0, navPx * zoom, navPx * zoom);
+    zctx.drawImage(nctx.canvas, 0, 0, navPx * zoom, navPx * zoom);
+  };
+}
+const NAV_A = { ...NAV, ARM: 0.55, LINE: 2 };
+const drawA = mount('A', renderA, { hero: HERO_A, tighten: false, navPx: 56, navCells: 28, zoom: 3, navRender: renderNavA, nav: NAV_A }), drawB = mount('B', renderB);
+const t0 = performance.now();
+let frame = 0;
+(function loop(now) {
+  const t = (now - t0) / 1000;
+  drawB(t);
+  if (frame++ % 2 === 0) drawA(t); // ray-tracing is heavier; 30 fps is plenty for it
+  requestAnimationFrame(loop);
+})(t0);
+</script>
+</body>
+</html>

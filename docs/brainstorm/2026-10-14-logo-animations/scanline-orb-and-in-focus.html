@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Scanline orb + In focus — 3D</title>
+<style>
+  @font-face { font-family:'Departure Mono'; src:url('DepartureMono.woff2') format('woff2'); }
+  * { box-sizing:border-box; margin:0; }
+  body { background:#050505; color:#ddd; font-family:'Departure Mono',monospace; padding:32px 40px 60px; }
+  .intro h1 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; }
+  .intro p { color:#777; font-size:13px; margin:10px 0 22px; max-width:980px; line-height:1.7; }
+  .intro b { color:#ddd; font-weight:400; }
+  h2 { font-size:11px; letter-spacing:.14em; text-transform:uppercase; font-weight:400; color:#888; margin:26px 0 12px; }
+  .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+  .opt { cursor:pointer; outline:1px solid #1a1a1a; background:#0A0A0A; transition:outline-color .2s; min-width:0; }
+  .opt.selected { outline:2px solid #fff; }
+  .anim { height:360px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .stack { position:relative; }
+  .stack pre { font-family:'Departure Mono'; white-space:pre; font-size:8px; letter-spacing:2.4px; line-height:9px; margin:0; }
+  .stack pre + pre { position:absolute; inset:0; }
+  .k { padding:12px 16px 16px; border-top:1px solid #141414; }
+  .k h3 { font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; color:#ddd; }
+  .k p { font-size:11.5px; color:#666; margin-top:6px; line-height:1.55; }
+</style>
+</head>
+<body>
+  <div class="intro">
+    <h1>Scanline orb + In focus · 3D</h1>
+    <p>
+      <b>Three animated takes on each symbol.</b> All are rendered live in 3D and drawn on the dot grid in three greys, except O3, which uses ASCII characters so you can compare the two looks.
+      Each loops every 8 to 10 seconds. Click the ones you like; picking more than one is fine.
+    </p>
+  </div>
+  <h2>Scanline orb</h2>
+  <div class="grid" id="g-orb"></div>
+  <h2>In focus</h2>
+  <div class="grid" id="g-focus"></div>
+
+<script>
+window.toggleSelect = el => el.classList.toggle('selected');
+// ---------------- math ----------------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const easeOutBack = x => { x = clamp(x); const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const len3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+function sdBox(x, y, z, bx, by, bz) {
+  const qx = Math.abs(x) - bx, qy = Math.abs(y) - by, qz = Math.abs(z) - bz;
+  return len3(Math.max(qx, 0), Math.max(qy, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qy, qz), 0);
+}
+function rY(x, z, a) { return [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)]; }
+function rX(y, z, b) { return [y * Math.cos(b) - z * Math.sin(b), y * Math.sin(b) + z * Math.cos(b)]; }
+// world -> object for camera (object rotated by Ry(a)·Rx(b))
+function toObj(x, y, z, a, b) { const [x1, z1] = rY(x, z, -a); const [y2, z2] = rX(y, z1, -b); return [x1, y2, z2]; }
+function toWorld(x, y, z, a, b) { const [y1, z1] = rX(y, z, b); const [x2, z2] = rY(x, z1, a); return [x2, y1, z2]; }
+
+// scanline slabs: SLAB rows across [-1,1], each slab fills FILL of its pitch
+const SLAB = 9, PITCH = 2 / SLAB, FILL = 0.6;
+const slabIdx = y => Math.floor((y + 1) / PITCH);
+function slabD(y) { const m = ((y + 1) % PITCH + PITCH) % PITCH; return Math.abs(m - PITCH * FILL / 2) - PITCH * FILL / 2; }
+
+// bracket (L shape) in the xy plane, corner at origin, arms along +x and +y
+function sdL(x, y, z, arm, th, dep) {
+  return Math.min(sdBox(x - arm / 2, y - th / 2, z, arm / 2, th / 2, dep), sdBox(x - th / 2, y - arm / 2, z, th / 2, arm / 2, dep));
+}
+
+// ---------------- variants ----------------
+// each: sdf(x,y,z,t,st) in object space, cam(t)->[a,b], span, prep(t)->state, cell(bucket,i,j,st)->override
+const V = {
+  // O1: orb whose scanline discs tumble in 3D; one disc slides out and snaps back
+  o1: {
+    group: 'orb', name: 'O1 · Tumbling scanlines',
+    desc: 'The orb turns in 3D, so its scanlines tilt into stacked discs. Every few seconds one disc slides out of line and snaps back.',
+    span: 1.35, cam: t => [t * 0.4, -0.55 + Math.sin(t * 0.45) * 0.35],
+    prep: t => { const c = t % 6; return { gk: 5, off: c > 3.6 && c < 4.6 ? Math.sin((c - 3.6) * Math.PI) * 0.45 : 0 }; },
+    sdf: (x, y, z, t, st) => { const k = slabIdx(y); const xx = k === st.gk ? x - st.off : x; return Math.max(len3(xx, y, z) - 1, slabD(y)) ; },
+  },
+  // O2: scanlines fixed to the screen; slabs slide in from alternating sides, hold, glitch, leave
+  o2: {
+    group: 'orb', name: 'O2 · Assembling scanlines',
+    desc: 'The scanlines stay level, like a screen. Line by line they slide in from alternating sides to build the orb, hold, glitch once, then slide out.',
+    span: 1.35, cam: t => [0.0, 0.0], world: true,
+    prep: t => { const c = t % 9; return { c }; },
+    sdf: (x, y, z, t, st) => {
+      const k = slabIdx(y), c = st.c, dir = k % 2 ? 1 : -1;
+      const tin = 0.15 + k * 0.12, tout = 7.2 + k * 0.1;
+      const pin = 1 - easeOutBack((c - tin) / 0.7), pout = smooth((c - tout) / 0.6);
+      let off = dir * (pin * 2.6 + pout * 2.6);
+      if (k === 4 && c > 4.4 && c < 5.0) off += Math.sin((c - 4.4) / 0.6 * Math.PI) * 0.35;
+      // sphere rotates slowly underneath so the shading moves
+      const [rx, rz] = rY(x - off, z, t * 0.6);
+      return Math.max(len3(rx, y, rz) - 1, slabD(y));
+    },
+  },
+  // O3: ASCII version with a refresh beam sweeping down
+  o3: {
+    group: 'orb', name: 'O3 · ASCII, refresh beam',
+    desc: 'The same level-scanline orb drawn in ASCII characters. A bright refresh beam sweeps down it like an old CRT, and the line it crosses glitches into random glyphs.',
+    span: 1.35, cam: t => [0.0, 0.0], world: true, ascii: true,
+    prep: t => { const c = t % 4; return { beam: 1.25 - c / 4 * 2.5 }; },
+    sdf: (x, y, z, t) => { const [rx, rz] = rY(x, z, t * 0.5); return Math.max(len3(rx, y, rz) - 1, slabD(y)); },
+  },
+  // F1: brackets fly in and lock onto a pixel which then decodes in
+  f1: {
+    group: 'focus', name: 'F1 · Lock-on',
+    desc: 'Four crop-mark brackets fly in from outside, overshoot slightly and lock on. The pixel in the middle then decodes in dot by dot, and the whole mark tilts gently in 3D.',
+    span: 1.45, cam: t => [Math.sin(t * 0.5) * 0.55, -0.22 + Math.sin(t * 0.33) * 0.12],
+    prep: t => { const c = t % 8; return { c, d: 1.0 + (1 - easeOutBack((c - 0.2) / 1.1)) * 0.9 - smooth((c - 7.2) / 0.6) * -0.9, px: smooth((c - 1.3) / 1.2) * (1 - smooth((c - 7.0) / 0.5)) }; },
+    sdf: (x, y, z, t, st) => {
+      const d = st.d, arm = 0.42, th = 0.09, dep = 0.09;
+      let m = Infinity;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) m = Math.min(m, sdL(-sx * (x - sx * d), -sy * (y - sy * d), z, arm, th, dep));
+      return Math.min(m, sdBox(x, y, z, 0.3, 0.3, 0.3));
+    },
+    cell: (c, st, seed, objId) => objId === 'px' && seed > st.px ? -1 : c,
+    objOf: (x, y, z) => sdBox(x, y, z, 0.31, 0.31, 0.31) < 0.01 ? 'px' : 'br',
+  },
+  // F2: autofocus hunting: brackets breathe in and out, centre pixel spins until focus lands
+  f2: {
+    group: 'focus', name: 'F2 · Autofocus',
+    desc: 'Like a camera hunting for focus: the brackets pulse in and out while the centre pixel spins. When focus lands, the brackets snap tight and the pixel stops, square to the viewer.',
+    span: 1.45, cam: t => [0.35, -0.3],
+    prep: t => { const c = t % 8; const hunt = c < 3.5 ? Math.sin(c * 5.5) * 0.28 * (1 - c / 3.5) : 0; const lock = c >= 3.5 && c < 7 ? 0 : 1; return { d: 1.0 + hunt + (c > 7 ? smooth((c - 7) / 0.6) * 0.5 : 0), spin: c < 3.5 ? c * 2.2 : c < 7 ? 3.5 * 2.2 + (1 - Math.exp(-(c - 3.5) * 6)) * (Math.ceil(3.5 * 2.2 / (Math.PI / 2)) * Math.PI / 2 - 3.5 * 2.2) : Math.ceil(3.5 * 2.2 / (Math.PI / 2)) * Math.PI / 2 + (c - 7) * 2.2 }; },
+    sdf: (x, y, z, t, st) => {
+      const d = st.d, arm = 0.42, th = 0.09, dep = 0.09;
+      let m = Infinity;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) m = Math.min(m, sdL(-sx * (x - sx * d), -sy * (y - sy * d), z, arm, th, dep));
+      const [cx, cz] = rY(x, z, st.spin);
+      return Math.min(m, sdBox(cx, y, cz, 0.3, 0.3, 0.3));
+    },
+  },
+  // F3: crop marks in 3D: the eight corners of a cube framing a small spinning pixel
+  f3: {
+    group: 'focus', name: 'F3 · Crop marks in 3D',
+    desc: 'The crop marks become the eight corners of an invisible cube, like 3D framing guides, around a small pixel turning the other way. The most sculptural option.',
+    span: 2.15, cam: t => [t * 0.35, -0.55 + Math.sin(t * 0.4) * 0.2],
+    prep: t => ({}),
+    sdf: (x, y, z, t) => {
+      const s = 1.0, arm = 0.34, th = 0.06;
+      const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+      // fold into one corner; three arms run back along the edges
+      const c = Math.min(
+        sdBox(ax - (s - arm / 2), ay - s, az - s, arm / 2, th, th),
+        sdBox(ax - s, ay - (s - arm / 2), az - s, th, arm / 2, th),
+        sdBox(ax - s, ay - s, az - (s - arm / 2), th, th, arm / 2));
+      const [px, pz] = rY(x, z, -t * 1.1);
+      const [py, pz2] = rX(y, pz, 0.6);
+      return Math.min(c, sdBox(px, py, pz2, 0.28, 0.28, 0.28));
+    },
+  },
+};
+
+// ---------------- renderer ----------------
+const W = 58, H = 38;
+const Lx = -0.55, Ly = 0.7, Lz = -0.45, Ll = Math.hypot(Lx, Ly, Lz);
+const RAMP = '.:-=+*#%@';
+const GL = '!<>/#%@$&*{}[]=+?';
+let ASPECT = 0.8;
+const views = [];
+
+for (const [id, v] of Object.entries(V)) {
+  const host = document.getElementById(v.group === 'orb' ? 'g-orb' : 'g-focus');
+  host.insertAdjacentHTML('beforeend', `
+    <div class="opt" data-choice="${id}" onclick="toggleSelect(this)">
+      <div class="anim"><div class="stack" id="st-${id}"><pre style="color:#202020"></pre><pre style="color:#4A4A4A"></pre><pre style="color:#9A9A9A"></pre><pre style="color:#EDEDED"></pre></div></div>
+      <div class="k"><h3>${v.name}</h3><p>${v.desc}</p></div>
+    </div>`);
+  const pres = [...document.querySelectorAll(`#st-${id} pre`)];
+  pres[0].textContent = Array.from({ length: H }, () => (v.ascii ? ' ' : '·').repeat(W)).join('\n');
+  views.push({ id, v, layers: pres.slice(1), seeds: new Float32Array(W * H).map(() => Math.random()) });
+}
+
+function render(view, t) {
+  const { v, layers, seeds } = view;
+  const st = v.prep(t);
+  const [a, b] = v.cam(t);
+  const sx = v.span / (W / 2), sy = sx / ASPECT;
+  const [dx, dy, dz] = toObj(0, 0, 1, a, b);
+  const f = (x, y, z) => v.sdf(x, y, z, t, st);
+  const rows = [[], [], []];
+  for (let j = 0; j < H; j++) {
+    const r = ['', '', ''];
+    const wyRow = -(j - H / 2 + 0.5) * sy;
+    for (let i = 0; i < W; i++) {
+      const wx = (i - W / 2 + 0.5) * sx;
+      const [ox, oy, oz] = toObj(wx, wyRow, -4, a, b);
+      let tt = 0, hit = false;
+      for (let k = 0; k < 70 && tt < 8; k++) {
+        const d = f(ox + dx * tt, oy + dy * tt, oz + dz * tt);
+        if (d < 0.003) { hit = true; break; }
+        tt += Math.max(d * 0.7, 0.004);
+      }
+      let bucket = -1, ch = '●';
+      if (hit) {
+        const px = ox + dx * tt, py = oy + dy * tt, pz = oz + dz * tt, e = 0.004;
+        const nx = f(px + e, py, pz) - f(px - e, py, pz), ny = f(px, py + e, pz) - f(px, py - e, pz), nz = f(px, py, pz + e) - f(px, py, pz - e);
+        const nl = Math.hypot(nx, ny, nz) || 1;
+        const [wnx, wny, wnz] = toWorld(nx / nl, ny / nl, nz / nl, a, b);
+        let lum = 0.1 + 0.9 * Math.max(0, (wnx * Lx + wny * Ly + wnz * Lz) / Ll);
+        bucket = lum > 0.62 ? 2 : lum > 0.32 ? 1 : 0;
+        if (v.cell) bucket = v.cell(bucket, st, seeds[j * W + i], v.objOf(px, py, pz));
+        if (v.ascii) {
+          const near = Math.abs(wyRow - st.beam) < 0.09;
+          ch = near ? GL[(Math.random() * GL.length) | 0] : RAMP[Math.min(RAMP.length - 1, Math.floor(lum * RAMP.length))];
+          if (near) bucket = 2;
+        }
+      }
+      for (let k = 0; k < 3; k++) r[k] += bucket === k ? ch : ' ';
+    }
+    for (let k = 0; k < 3; k++) rows[k].push(r[k]);
+  }
+  layers.forEach((el, k) => el.textContent = rows[k].join('\n'));
+}
+
+const probe = document.createElement('span');
+probe.style.cssText = "position:absolute;visibility:hidden;font:8px 'Departure Mono';letter-spacing:2.4px;white-space:pre";
+probe.textContent = '··········';
+document.body.appendChild(probe);
+document.fonts.load("8px 'Departure Mono'").then(() => {
+  ASPECT = probe.getBoundingClientRect().width / 10 / 9;
+  probe.remove();
+  const t0 = performance.now();
+  let n = 0;
+  (function loop(now) {
+    const t = (now - t0) / 1000;
+    for (let k = 0; k < 2; k++) { render(views[n], t); n = (n + 1) % views.length; }
+    requestAnimationFrame(loop);
+  })(t0);
+});
+</script>
+</body>
+</html>

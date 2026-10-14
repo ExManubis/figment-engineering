@@ -26,3 +26,6 @@ pnpm-debug.log*
 # claude
 .claude/
 CLAUDE.md
+
+# brainstorm companion scratch files
+.superpowers/
