@@ -11,7 +11,7 @@ const KEY: Vec3 = (() => {
 /** Key light plus a rim term, for a world-space normal. */
 export function shade(n: Vec3): number {
   const key = Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
-  return clamp01(0.1 + 0.9 * key + 0.28 * Math.pow(1 - Math.abs(n[2]), 2.2));
+  return clamp01(0.1 + 0.9 * key + 0.28 * Math.pow(Math.max(0, 1 - Math.abs(n[2])), 2.2));
 }
 
 /** Sphere-trace the logo onto a square-celled grid. ss > 1 supersamples each cell (ss × ss rays). */
@@ -48,10 +48,7 @@ export function renderLogo(grid: { cols: number; rows: number; ss?: number }, g:
           const ny = f(px, py + e, pz) - f(px, py - e, pz);
           const nz = f(px, py, pz + e) - f(px, py, pz - e);
           const nl = Math.hypot(nx, ny, nz) || 1;
-          const rotated = qRot(p.qCam, [nx / nl, ny / nl, nz / nl]);
-          const rotLen = Math.hypot(rotated[0], rotated[1], rotated[2]);
-          const normal: Vec3 = rotLen > 0 ? [rotated[0] / rotLen, rotated[1] / rotLen, rotated[2] / rotLen] : rotated;
-          lum += shade(normal) * c;
+          lum += shade(qRot(p.qCam, [nx / nl, ny / nl, nz / nl])) * c;
           cov += c;
         }
       }

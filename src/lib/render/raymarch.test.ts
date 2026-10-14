@@ -34,4 +34,11 @@ describe('shade', () => {
       expect(v).toBeLessThanOrEqual(1);
     }
   });
+
+  it('handles numerical edge cases with z < -1 safely', () => {
+    const v = shade([0, 0, -1.0000000000000002]);
+    expect(Number.isFinite(v)).toBe(true);
+    expect(v).toBeGreaterThanOrEqual(0);
+    expect(v).toBeLessThanOrEqual(1);
+  });
 });
