@@ -19,8 +19,8 @@ export interface Project {
   /** 3–4 short lines; none for a teaser that has no links yet */
   features: string[];
   links: ProjectLink[];
-  /** cga: the header redrawn in the style of the project's logo; default ANSI Shadow in the brand gradient */
-  header?: 'cga';
+  /** cga: the header redrawn in the style of the project's logo; figbot: pixel type with the mascot as the o; default ANSI Shadow in the brand gradient */
+  header?: 'cga' | 'figbot';
   /** short muted line beside the links, e.g. system requirements */
   note?: string;
   demo: DemoId;
@@ -54,6 +54,7 @@ export const projects: Project[] = [
     features: [],
     links: [],
     note: 'Coming soon',
+    header: 'figbot',
     demo: 'figbot',
   },
   {

@@ -10,7 +10,8 @@ export function dotRadius(lum: number): number {
   return r < 0.07 ? 0 : r;
 }
 
-export function svgBody(c: ArrayLike<number>, cols: number, rows: number): string {
+/** `background: null` leaves the dots on a transparent ground. */
+export function svgBody(c: ArrayLike<number>, cols: number, rows: number, background: string | null = BG_COLOR): string {
   const dots: string[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
@@ -18,7 +19,8 @@ export function svgBody(c: ArrayLike<number>, cols: number, rows: number): strin
       if (r > 0) dots.push(`<circle cx="${i + 0.5}" cy="${j + 0.5}" r="${r.toFixed(3)}"/>`);
     }
   }
-  return `<rect width="${cols}" height="${rows}" fill="${BG_COLOR}"/><g fill="${FG_COLOR}">${dots.join('')}</g>`;
+  const rect = background ? `<rect width="${cols}" height="${rows}" fill="${background}"/>` : '';
+  return `${rect}<g fill="${FG_COLOR}">${dots.join('')}</g>`;
 }
 
 /** `pixelWidth` sets the displayed size (height follows the aspect ratio); it defaults to one pixel per cell. */

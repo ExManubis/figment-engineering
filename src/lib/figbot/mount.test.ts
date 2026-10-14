@@ -11,7 +11,8 @@ vi.mock('../report', () => ({ reportError: m.reportError }));
 import { GRID, POSES, cells } from '../../../figbot/src/model';
 import { dotRadius } from '../../../figbot/src/svg';
 import { poseAt } from '../../../figbot/src/timeline';
-import { drawPose, mountFigbotDemo } from './mount';
+import { drawPose, mountFigbotDemo, mountFigbotTitle } from './mount';
+import { TITLE_N, titleCells, titlePose } from './title';
 
 const fakeCtx = () => ({
   clearRect: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), arc: vi.fn(), fill: vi.fn(), setTransform: vi.fn(), fillStyle: '',
@@ -90,6 +91,29 @@ describe('mountFigbotDemo', () => {
     expect(m.register).not.toHaveBeenCalled();
     expect(m.reportError).toHaveBeenCalledTimes(1);
     expect(canvas.hidden).toBe(true);
+    expect(still.hidden).toBe(false);
+  });
+});
+
+describe('mountFigbotTitle', () => {
+  it('draws the idle title face over its still, sized to the canvas', () => {
+    m.register.mockReturnValue({ stop: vi.fn() });
+    const { root, canvas, still, ctx } = fakeRoot();
+    canvas.clientWidth = 60;
+    mountFigbotTitle(root);
+    (m.register.mock.calls[0][0] as { frame: (now: number) => void }).frame(3);
+    const lit = Array.from(titleCells(titlePose(0))).filter((l) => dotRadius(l) > 0);
+    expect(ctx!.arc).toHaveBeenCalledTimes(lit.length);
+    expect(ctx!.arc.mock.calls[0][2]).toBeCloseTo(dotRadius(lit[0]) * (60 / TITLE_N), 10);
+    expect(canvas.hidden).toBe(false);
+    expect(still.hidden).toBe(true);
+  });
+
+  it('under reduced motion keeps the still', () => {
+    m.prefersReducedMotion.mockReturnValue(true);
+    const { root, still } = fakeRoot();
+    mountFigbotTitle(root);
+    expect(m.register).not.toHaveBeenCalled();
     expect(still.hidden).toBe(false);
   });
 });

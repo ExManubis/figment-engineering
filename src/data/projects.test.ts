@@ -15,6 +15,7 @@ describe('projects', () => {
     expect(f.features).toEqual([]);
     expect(f.links).toEqual([]);
     expect(f.note).toBe('Coming soon');
+    expect(f.header).toBe('figbot');
   });
 
   it('has PrompTTY third, in its logo cyan', () => {

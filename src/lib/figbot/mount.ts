@@ -3,17 +3,17 @@ import { FG_COLOR, dotRadius } from '../../../figbot/src/svg';
 import { poseAt } from '../../../figbot/src/timeline';
 import { prefersReducedMotion, register, type Handle } from '../motion/scheduler';
 import { reportError } from '../report';
+import { TITLE_N, titleCells, titlePose } from './title';
 
-/** Paints a pose as halftone dots filling a size×size square (CSS px). */
-export function drawPose(ctx: CanvasRenderingContext2D, pose: Pose, size: number): void {
-  const cell = size / GRID;
-  const c = cells(pose, GRID, GRID);
+/** Paints an n×n grid of cells as halftone dots filling a size×size square (CSS px). */
+function drawCells(ctx: CanvasRenderingContext2D, c: ArrayLike<number>, n: number, size: number): void {
+  const cell = size / n;
   ctx.clearRect(0, 0, size, size);
   ctx.fillStyle = FG_COLOR;
   ctx.beginPath();
-  for (let j = 0; j < GRID; j++) {
-    for (let i = 0; i < GRID; i++) {
-      const r = dotRadius(c[j * GRID + i]) * cell;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const r = dotRadius(c[j * n + i]) * cell;
       if (r <= 0) continue;
       const x = (i + 0.5) * cell, y = (j + 0.5) * cell;
       ctx.moveTo(x + r, y);
@@ -23,8 +23,23 @@ export function drawPose(ctx: CanvasRenderingContext2D, pose: Pose, size: number
   ctx.fill();
 }
 
-/** Plays the Figbot loop over the server-rendered still; the still stays under reduced motion or on failure. */
+/** Paints a pose on the demo's 48-cell grid. */
+export function drawPose(ctx: CanvasRenderingContext2D, pose: Pose, size: number): void {
+  drawCells(ctx, cells(pose, GRID, GRID), GRID, size);
+}
+
+/** The section demo: the full expression loop. */
 export function mountFigbotDemo(root: HTMLElement): void {
+  play(root, (ctx, t, size) => drawPose(ctx, poseAt(t), size));
+}
+
+/** The title's "o": Figbot idling, on its own small grid. */
+export function mountFigbotTitle(root: HTMLElement): void {
+  play(root, (ctx, t, size) => drawCells(ctx, titleCells(titlePose(t)), TITLE_N, size));
+}
+
+/** Plays `draw` over the server-rendered still from the first visible frame; the still stays under reduced motion or on failure. */
+function play(root: HTMLElement, draw: (ctx: CanvasRenderingContext2D, t: number, size: number) => void): void {
   const canvas = root.querySelector<HTMLCanvasElement>('[data-figbot-canvas]');
   const still = root.querySelector<HTMLElement>('[data-figbot-still]');
   if (!canvas || !still || prefersReducedMotion()) return;
@@ -44,7 +59,7 @@ export function mountFigbotDemo(root: HTMLElement): void {
 
   try {
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('figbot demo: no 2D canvas context');
+    if (!ctx) throw new Error('figbot: no 2D canvas context');
     let started: number | null = null; // seconds; the loop starts on the first visible frame
     handle = register({
       el: root,
@@ -57,7 +72,7 @@ export function mountFigbotDemo(root: HTMLElement): void {
           const px = Math.round(size * dpr);
           if (canvas.width !== px) canvas.width = canvas.height = px;
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          drawPose(ctx, poseAt(now - started), size);
+          draw(ctx, now - started, size);
           if (canvas.hidden) {
             canvas.hidden = false;
             still.hidden = true;

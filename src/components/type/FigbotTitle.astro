@@ -1,0 +1,45 @@
+---
+import { svgBody } from '../../../figbot/src/svg';
+import { TITLE_N, titleCells, titlePose } from '../../lib/figbot/title';
+
+// the server renders the face still (eyes open); the script lets it blink and glance
+const still = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TITLE_N} ${TITLE_N}">${svgBody(titleCells(titlePose(1)), TITLE_N, TITLE_N, null)}</svg>`;
+---
+
+{/* decorative: the section's sr-only heading names the project */}
+<div class="figbot-title" aria-hidden="true">
+	figb<span class="face" data-figbot-title><span class="layer" data-figbot-still set:html={still} /><canvas class="layer" data-figbot-canvas hidden></canvas></span>t
+</div>
+
+<script>
+	import { mountFigbotTitle } from '../../lib/figbot/mount';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-figbot-title]').forEach((el) => {
+		try { mountFigbotTitle(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	.figbot-title {
+		font-family: var(--font-brand);
+		font-size: clamp(56px, 9vw, 112px);
+		line-height: 1;
+		letter-spacing: 0.03em;
+		/* keep f and i apart: Bitcount joins them otherwise */
+		font-variant-ligatures: none;
+		font-feature-settings: 'liga' 0, 'clig' 0;
+		white-space: nowrap;
+		color: var(--color-fg);
+	}
+	/* the "o": as tall as the b (0.6 em), sitting on the baseline, with the same gap after it as between letters */
+	.face {
+		position: relative;
+		display: inline-block;
+		width: 0.6em;
+		height: 0.6em;
+		margin-right: 0.03em;
+	}
+	.layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+	.layer[hidden] { display: none; }
+	.layer :global(svg) { display: block; width: 100%; height: 100%; }
+</style>

@@ -38,4 +38,10 @@ describe('svg', () => {
   it('can set the pixel size, keeping the aspect ratio', () => {
     expect(toSvg([1, 1], 2, 1, 2, 2048)).toContain('viewBox="0 0 2 1" width="2048" height="1024"');
   });
+
+  it('can leave out the background, for dots over the page', () => {
+    const body = svgBody([1], 1, 1, null);
+    expect(body).not.toContain('<rect');
+    expect(body).toContain('<circle');
+  });
 });
