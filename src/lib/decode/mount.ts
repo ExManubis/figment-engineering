@@ -1,4 +1,4 @@
-import { prefersReducedMotion, register } from '../motion/scheduler';
+import { prefersReducedMotion, register, type Handle } from '../motion/scheduler';
 import { reportError } from '../report';
 import { fitPre } from '../type/fit';
 import { layoutFrame, renderFrame, scrollProgress, type FrameLayout } from './frame';
@@ -29,6 +29,19 @@ function mountOne(el: HTMLElement): void {
   }));
   let layout: FrameLayout = { cols: 0, rows: 0, cells: [] };
   let lastP = -1;
+  let handle: Handle | undefined;
+  let failed = false;
+
+  const fail = (err: unknown) => {
+    if (failed) return;
+    failed = true;
+    reportError(err);
+    el.setAttribute('data-failed', '');
+    border.textContent = '';
+    for (const h of headers) h.el.textContent = h.text;
+    handle?.stop();
+    handle = undefined;
+  };
 
   const relayout = () => {
     const cw = charWidth(border);
@@ -40,24 +53,42 @@ function mountOne(el: HTMLElement): void {
     }
     lastP = -1;
   };
-  relayout();
-  new ResizeObserver(relayout).observe(el);
-  document.fonts?.ready.then(relayout).catch(() => {});
+  const safeRelayout = () => {
+    if (failed) return;
+    try {
+      relayout();
+    } catch (err) {
+      fail(err);
+    }
+  };
 
-  const reduced = prefersReducedMotion();
-  register({
-    el,
-    fps: 30,
-    frame: () => {
-      const r = el.getBoundingClientRect();
-      const p = reduced ? 1 : scrollProgress(r.top, r.bottom, window.innerHeight);
-      if ((p <= 0 || p >= 1) && p === lastP) return;
-      lastP = p;
-      border.textContent = renderFrame(layout, p, rng);
-      for (const h of headers) h.el.textContent = decodeText(h.text, h.seeds, p, rng);
-      el.toggleAttribute('data-active', p > 0.5);
-    },
-  });
+  try {
+    relayout();
+    new ResizeObserver(safeRelayout).observe(el);
+    document.fonts?.ready.then(safeRelayout).catch(fail);
+
+    const reduced = prefersReducedMotion();
+    handle = register({
+      el,
+      fps: 30,
+      frame: () => {
+        try {
+          const r = el.getBoundingClientRect();
+          const p = reduced ? 1 : scrollProgress(r.top, r.bottom, window.innerHeight);
+          if ((p <= 0 || p >= 1) && p === lastP) return;
+          lastP = p;
+          border.textContent = renderFrame(layout, p, rng);
+          for (const h of headers) h.el.textContent = decodeText(h.text, h.seeds, p, rng);
+          el.toggleAttribute('data-active', p > 0.5);
+        } catch (err) {
+          fail(err);
+        }
+      },
+    });
+    if (failed) handle.stop();
+  } catch (err) {
+    fail(err);
+  }
 }
 
 export function mountDecodeFrames(root: ParentNode = document): void {
@@ -67,6 +98,7 @@ export function mountDecodeFrames(root: ParentNode = document): void {
       mountOne(el);
     } catch (err) {
       reportError(err);
+      el.setAttribute('data-failed', '');
     }
   });
 }

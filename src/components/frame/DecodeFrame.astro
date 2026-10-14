@@ -23,7 +23,7 @@ const style = brand ? `--brand: ${brand.primary};${brand.secondary ? ` --brand-2
 		--frame-color: var(--color-subtle);
 		border: 1px solid var(--color-subtle); /* no-JS fallback */
 	}
-	:global(.js) .decode-frame { border-color: transparent; }
+	:global(.js) .decode-frame[data-mounted]:not([data-failed]) { border-color: transparent; }
 	.decode-frame[data-active][data-branded] { --frame-color: var(--brand); }
 	.decode-frame[data-active][data-branded] :global(.ascii-header) { color: var(--brand); }
 	.decode-frame__border {
