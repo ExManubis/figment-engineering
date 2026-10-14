@@ -4,7 +4,7 @@ const m = vi.hoisted(() => ({ register: vi.fn(), prefersReducedMotion: vi.fn(), 
 vi.mock('../motion/scheduler', () => ({ register: m.register, prefersReducedMotion: m.prefersReducedMotion }));
 vi.mock('../report', () => ({ reportError: m.reportError }));
 
-import { WALLPAPERS } from '../../data/wallpapers';
+import { DEVICES, WALLPAPERS } from '../../data/wallpapers';
 import { TYPE_S } from '../type/typed';
 import { mountWallpapers } from './mount';
 
@@ -25,9 +25,9 @@ const el = (extra: Record<string, unknown> = {}) => {
 
 /** the section's markup as plain objects, server-rendered on Monolith for Mac */
 function fakeSection() {
-  const previews = (['mac', 'ipad', 'iphone'] as const).map((d) => el({ dataset: { for: d } }));
+  const previews = DEVICES.map((d) => el({ dataset: { for: d.id } }));
   const designs = WALLPAPERS.map((w) => el({ dataset: { wpDesign: w.id } }));
-  const devices = (['mac', 'ipad', 'iphone'] as const).map((d) => el({ dataset: { wpDevice: d } }));
+  const devices = DEVICES.map((d) => el({ dataset: { wpDevice: d.id } }));
   const parts = { path: el(), file: el({ textContent: 'fe-monolith.png' }), cursor: el(), name: el(), meta: el(), download: el() };
   const root = {
     dataset: {} as Record<string, string>,
@@ -66,7 +66,7 @@ describe('mountWallpapers', () => {
     const s = fakeSection();
     mountWallpapers(s.root);
     expect(s.root.dataset.device).toBe('iphone');
-    expect(s.previews[2].src).toBe('/wallpapers/preview/iphone/fe-monolith.png');
+    expect(s.previews[3].src).toBe('/wallpapers/preview/iphone/fe-monolith.png');
   });
 
   it('switches design and device, and retypes the filename from the start', () => {
@@ -78,9 +78,9 @@ describe('mountWallpapers', () => {
     expect(s.file.textContent).toBe('fe-monolith.png');
 
     s.designs[4].click(); // Claudewitz
-    s.devices[1].click(); // iPad
+    s.devices[2].click(); // iPad
     expect(s.root.dataset.device).toBe('ipad');
-    expect(s.previews[1].src).toBe('/wallpapers/preview/ipad/cw-bean.png');
+    expect(s.previews[2].src).toBe('/wallpapers/preview/ipad/cw-bean.png');
     expect(s.download.href).toBe('/wallpapers/ipad/cw-bean.png');
     expect(s.name.textContent).toBe('Claudewitz');
     expect(s.path.textContent).toBe('~/wallpapers/ipad/');
@@ -118,5 +118,15 @@ describe('mountWallpapers', () => {
     s.designs[2].click();
     expect(s.download.href).toBe('/wallpapers/mac/fe-homepage.png');
     expect(s.file.textContent).toBe('fe-homepage.png');
+  });
+
+  it('offers the MacBook Pro 16″ at its native size, named in full for screen readers', () => {
+    const s = fakeSection();
+    mountWallpapers(s.root);
+    s.devices[1].click();
+    expect(s.root.dataset.device).toBe('macbook');
+    expect(s.previews[1].src).toBe('/wallpapers/preview/macbook/fe-monolith.png');
+    expect(s.previews[1].alt).toBe('Monolith wallpaper for MacBook Pro 16″');
+    expect(s.meta.textContent).toMatch(/^3456×2234 PNG · /);
   });
 });

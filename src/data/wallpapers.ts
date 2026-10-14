@@ -1,10 +1,13 @@
 import sizes from './wallpaper-sizes.json';
 
-export type DeviceId = 'mac' | 'ipad' | 'iphone';
+export type DeviceId = 'mac' | 'macbook' | 'ipad' | 'iphone';
 
 export interface Device {
   id: DeviceId;
+  /** short, for the device toggle */
   label: string;
+  /** in full, for alt text */
+  model: string;
   width: number;
   height: number;
   /** dot-grid cell of the render, in px; finer screens get a finer grid */
@@ -14,9 +17,10 @@ export interface Device {
 }
 
 export const DEVICES: Device[] = [
-  { id: 'mac', label: 'Mac', width: 5120, height: 2880, cell: 16, previewWidth: 1440 },
-  { id: 'ipad', label: 'iPad', width: 2752, height: 2064, cell: 12, previewWidth: 1120 },
-  { id: 'iphone', label: 'iPhone', width: 1320, height: 2868, cell: 12, previewWidth: 440 },
+  { id: 'mac', label: 'Mac', model: 'Mac', width: 5120, height: 2880, cell: 16, previewWidth: 1440 },
+  { id: 'macbook', label: 'MacBook', model: 'MacBook Pro 16″', width: 3456, height: 2234, cell: 12, previewWidth: 1200 },
+  { id: 'ipad', label: 'iPad', model: 'iPad', width: 2752, height: 2064, cell: 12, previewWidth: 1120 },
+  { id: 'iphone', label: 'iPhone', model: 'iPhone', width: 1320, height: 2868, cell: 12, previewWidth: 440 },
 ];
 
 export interface Wallpaper {
