@@ -23,7 +23,7 @@ export function mountHero(root: HTMLElement): void {
 
   const size = () => {
     const w = box.clientWidth;
-    const base = window.innerWidth < 640 ? 72 : 124;
+    const base = window.innerWidth < 640 ? 60 : 124;
     cols = Math.max(24, Math.round(base * quality));
     cell = w / cols;
     rows = Math.round((w * ASPECT) / cell);
