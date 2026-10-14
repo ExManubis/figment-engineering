@@ -27,6 +27,10 @@ writeFileSync(`${OUT}/hero-square.png`, png(hero, 2048));
 const WIDE = (GRID * 16) / 9; // 85.33 cells: crop the last column so the PNG is exactly 2560×1440
 writeFileSync(`${OUT}/hero-wide.png`, png(toSvg(cells(POSES.idle, Math.ceil(WIDE), GRID, { x0: 4, y0: 0, size: GRID }), Math.ceil(WIDE), GRID, WIDE), 2560));
 
+// the site's 16 px project mark (hero links): Idle on one cell per pixel
+const ICON = 16;
+writeFileSync('public/icons/figbot.svg', toSvg(cells(POSES.idle, ICON, ICON), ICON, ICON, ICON, 512));
+
 // expressions: one PNG each, plus a labelled 4 + 3 sheet
 const TILE = 560, GAP = 40, MARGIN = 80, LABEL = 70, PER_ROW = 4;
 const tiles = EXPRESSIONS.map((name, n) => {
