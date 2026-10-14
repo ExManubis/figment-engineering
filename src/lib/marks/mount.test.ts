@@ -21,6 +21,8 @@ import { LOCATION, WORDMARK } from './text';
 /** the row's markup as plain objects, server-rendered in its finished state */
 function fakeRow() {
   const canvas = {};
+  const scCanvas = {};
+  const letters = Array.from('smallclaims.ai', () => ({ style: { opacity: '', transform: '' } }));
   const wordmark = { textContent: WORDMARK };
   const location = { textContent: LOCATION };
   const copyright = { textContent: '© 2026 ', dataset: { text: '© 2026' } };
@@ -28,10 +30,12 @@ function fakeRow() {
   const root = {
     querySelector: (sel: string) => ({
       '[data-mark-cube]': canvas, '[data-mark-wordmark]': wordmark, '[data-mark-location]': location, '[data-mark-copyright]': copyright,
+      '[data-mark-smallclaims] canvas': scCanvas,
     })[sel] ?? null,
+    querySelectorAll: (sel: string) => (sel === '[data-mark-smallclaims] [data-letter]' ? letters : []),
     setAttribute: (k: string, v: string) => { attrs[k] = v; },
   } as unknown as HTMLElement;
-  return { root, wordmark, location, copyright, attrs };
+  return { root, wordmark, location, copyright, letters, attrs };
 }
 
 beforeEach(() => {
@@ -49,14 +53,27 @@ describe('mountHeroMarks', () => {
     anim.frame(100); // the first frame starts every loop from the top
     expect(wordmark.textContent).toBe(WORDMARK.replace(/\S/g, ' '));
     expect(copyright.textContent).toBe('      █');
-    expect(m.paintCells).toHaveBeenCalledTimes(1);
+    expect(m.paintCells).toHaveBeenCalledTimes(2); // the cube and the smallclaims S
+  });
+
+  it('runs the shimmer across the smallclaims letters, after the S', () => {
+    m.register.mockReturnValue({ stop: vi.fn() });
+    const { root, letters } = fakeRow();
+    mountHeroMarks(root);
+    const anim = m.register.mock.calls[0][0] as { frame: (now: number) => void };
+    anim.frame(100);
+    expect(letters[0].style.opacity).toBe('1');
+    anim.frame(100 + (0 + 2 + 1.5) / 12); // the wave's middle on the first letter
+    expect(Number(letters[0].style.opacity)).toBeCloseTo(0.35);
+    expect(letters[0].style.transform).toBe('translateY(-1px)');
+    expect(letters[13].style.opacity).toBe('1');
   });
 
   it('under reduced motion paints a still cube, leaves the finished text and never registers', () => {
     m.prefersReducedMotion.mockReturnValue(true);
     const { root, wordmark, copyright } = fakeRow();
     mountHeroMarks(root);
-    expect(m.paintCells).toHaveBeenCalledTimes(1);
+    expect(m.paintCells).toHaveBeenCalledTimes(2);
     expect(m.register).not.toHaveBeenCalled();
     expect(wordmark.textContent).toBe(WORDMARK);
     expect(copyright.textContent).toBe('© 2026 ');
@@ -65,8 +82,9 @@ describe('mountHeroMarks', () => {
   it('on a frame failure reports once, restores the finished text, shows the fallback and stops once', () => {
     const stop = vi.fn();
     m.register.mockReturnValue({ stop });
-    const { root, wordmark, location, copyright, attrs } = fakeRow();
+    const { root, wordmark, location, copyright, letters, attrs } = fakeRow();
     mountHeroMarks(root);
+    letters[0].style.opacity = '0.4';
     m.paintCells.mockImplementation(() => { throw new Error('boom'); });
     const anim = m.register.mock.calls[0][0] as { frame: (now: number) => void };
     expect(() => { anim.frame(1); anim.frame(1.1); }).not.toThrow();
@@ -76,5 +94,6 @@ describe('mountHeroMarks', () => {
     expect(wordmark.textContent).toBe(WORDMARK);
     expect(location.textContent).toBe(LOCATION);
     expect(copyright.textContent).toBe('© 2026 ');
+    expect(letters[0].style.opacity).toBe('');
   });
 });

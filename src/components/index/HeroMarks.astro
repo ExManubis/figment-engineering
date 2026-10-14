@@ -4,15 +4,20 @@ import { LOCATION, WORDMARK } from '../../lib/marks/text';
 
 // the year the site was built, like the footer; the script types it out behind a cursor
 const year = `© ${new Date().getFullYear()}`;
+const SMALLCLAIMS = 'smallclaims.ai';
 ---
 
-{/* decorative: the name and copyright are in the nav and footer */}
-<div class="label flex w-full items-center justify-between opacity-50 lg:absolute lg:inset-x-0 lg:bottom-6 lg:px-6" data-hero-marks aria-hidden="true">
-	<canvas class="no-js-hide" data-mark-cube width={SMALL_CELLS} height={SMALL_CELLS}></canvas>
-	<img class="js-hide" src="/favicon.svg" alt="" width={SMALL_CELLS} height={SMALL_CELLS} />
-	<span class="mark" data-mark-wordmark>{WORDMARK}</span>
-	<span class="mark max-sm:hidden" data-mark-location>{LOCATION}</span>
-	<span class="mark" data-mark-copyright data-text={year}>{`${year} `}</span>
+{/* the marks are decorative (the name and copyright are in the nav and footer); only the smallclaims link is read out */}
+<div class="label flex w-full items-center justify-between lg:absolute lg:inset-x-0 lg:bottom-6 lg:px-6" data-hero-marks>
+	<canvas class="no-js-hide dim" data-mark-cube width={SMALL_CELLS} height={SMALL_CELLS} aria-hidden="true"></canvas>
+	<img class="js-hide dim" src="/favicon.svg" alt="" width={SMALL_CELLS} height={SMALL_CELLS} />
+	<span class="mark dim" data-mark-wordmark aria-hidden="true">{WORDMARK}</span>
+	<a class="smallclaims dim inline-flex items-center gap-2.5 max-sm:hidden" href="https://smallclaims.ai" target="_blank" rel="noopener" aria-label={SMALLCLAIMS} data-mark-smallclaims>
+		<canvas class="no-js-hide" aria-hidden="true"></canvas>
+		<span aria-hidden="true">{Array.from(SMALLCLAIMS, (c) => <span data-letter>{c}</span>)}</span>
+	</a>
+	<span class="mark dim max-sm:hidden" data-mark-location aria-hidden="true">{LOCATION}</span>
+	<span class="mark dim" data-mark-copyright data-text={year} aria-hidden="true">{`${year} `}</span>
 </div>
 
 <script>
@@ -25,4 +30,9 @@ const year = `© ${new Date().getFullYear()}`;
 
 <style>
 	.mark { white-space: pre; line-height: 1.15; }
+	.dim { opacity: 0.5; }
+	/* grey like the rest of the row; white when hovered or focused, no other colour */
+	.smallclaims { color: inherit; text-decoration: none; transition: opacity 0.2s; }
+	.smallclaims:hover, .smallclaims:focus-visible { opacity: 1; }
+	.smallclaims [data-letter] { display: inline-block; }
 </style>
