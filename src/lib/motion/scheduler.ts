@@ -74,16 +74,27 @@ let browser: ReturnType<typeof createScheduler> | null = null;
 
 function browserScheduler() {
   if (browser) return browser;
-  const callbacks = new Map<Element, (v: boolean) => void>();
+  const callbacks = new Map<Element, Set<(v: boolean) => void>>();
   const io = new IntersectionObserver((records) => {
-    for (const r of records) callbacks.get(r.target)?.(r.isIntersecting);
+    for (const r of records) {
+      callbacks.get(r.target)?.forEach((cb) => cb(r.isIntersecting));
+    }
   });
   browser = createScheduler({
     raf: (cb) => { requestAnimationFrame(cb); },
     observe: (el, cb) => {
-      callbacks.set(el, cb);
-      io.observe(el);
-      return () => { io.unobserve(el); callbacks.delete(el); };
+      if (!callbacks.has(el)) {
+        callbacks.set(el, new Set());
+        io.observe(el);
+      }
+      callbacks.get(el)!.add(cb);
+      return () => {
+        callbacks.get(el)!.delete(cb);
+        if (callbacks.get(el)!.size === 0) {
+          callbacks.delete(el);
+          io.unobserve(el);
+        }
+      };
     },
     onError: reportError,
   });

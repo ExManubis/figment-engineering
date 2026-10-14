@@ -82,4 +82,56 @@ describe('scheduler', () => {
     h.flush(1016);
     expect(h.pending()).toBe(0);
   });
+
+  it('supports multiple animations on the same element', () => {
+    let queued: ((now: number) => void)[] = [];
+    const callbacks = new Map<Element, Set<(v: boolean) => void>>();
+    const onError = vi.fn();
+    const s = createScheduler({
+      raf: (cb) => { queued.push(cb); },
+      observe: (el, cb) => {
+        if (!callbacks.has(el)) callbacks.set(el, new Set());
+        callbacks.get(el)!.add(cb);
+        return () => {
+          callbacks.get(el)!.delete(cb);
+          if (callbacks.get(el)!.size === 0) callbacks.delete(el);
+        };
+      },
+      onError,
+    });
+    const flush = (now: number) => { const q = queued; queued = []; q.forEach((cb) => cb(now)); };
+
+    const el = {} as Element;
+    const frame1 = vi.fn();
+    const frame2 = vi.fn();
+    const h1 = s.register({ el, frame: frame1 });
+    const h2 = s.register({ el, frame: frame2 });
+
+    // Both start with visibility paused (el not in IntersectionObserver yet)
+    flush(1000);
+    expect(frame1).toHaveBeenCalledTimes(0);
+    expect(frame2).toHaveBeenCalledTimes(0);
+
+    // Notify both callbacks that element is visible
+    for (const cb of callbacks.get(el) || []) cb(true);
+    flush(1000);
+    expect(frame1).toHaveBeenCalledTimes(1);
+    expect(frame2).toHaveBeenCalledTimes(1);
+
+    // Stop one animation
+    h1.stop();
+    flush(1016);
+    expect(frame1).toHaveBeenCalledTimes(1); // Still 1, stopped
+    expect(frame2).toHaveBeenCalledTimes(2); // Got the update
+
+    // Notify invisibility; second animation should still receive it
+    for (const cb of callbacks.get(el) || []) cb(false);
+    flush(2000);
+    expect(frame2).toHaveBeenCalledTimes(2); // No new call while invisible
+
+    // Notify visibility again; second animation should resume
+    for (const cb of callbacks.get(el) || []) cb(true);
+    flush(3000);
+    expect(frame2).toHaveBeenCalledTimes(3);
+  });
 });
