@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createScheduler } from './scheduler';
+import { createScheduler, createVisibilityRegistry } from './scheduler';
 
 function harness() {
   let queued: ((now: number) => void)[] = [];
@@ -133,5 +133,119 @@ describe('scheduler', () => {
     for (const cb of callbacks.get(el) || []) cb(true);
     flush(3000);
     expect(frame2).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('visibility registry', () => {
+  it('two callbacks on one element both receive updates', () => {
+    let recordsCallback: ((records: { target: Element; isIntersecting: boolean }[]) => void) | null = null;
+    const mockObserver = {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+    };
+    const registry = createVisibilityRegistry((cb) => {
+      recordsCallback = cb;
+      return mockObserver;
+    });
+
+    const el = {} as Element;
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+
+    registry.observe(el, cb1);
+    registry.observe(el, cb2);
+
+    // Simulate IntersectionObserver notification
+    recordsCallback?.([{ target: el, isIntersecting: true }]);
+    expect(cb1).toHaveBeenCalledWith(true);
+    expect(cb2).toHaveBeenCalledWith(true);
+
+    recordsCallback?.([{ target: el, isIntersecting: false }]);
+    expect(cb1).toHaveBeenCalledWith(false);
+    expect(cb2).toHaveBeenCalledWith(false);
+  });
+
+  it('stopping one callback keeps the other updating and does not unobserve', () => {
+    let recordsCallback: ((records: { target: Element; isIntersecting: boolean }[]) => void) | null = null;
+    const mockObserver = {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+    };
+    const registry = createVisibilityRegistry((cb) => {
+      recordsCallback = cb;
+      return mockObserver;
+    });
+
+    const el = {} as Element;
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+
+    const stop1 = registry.observe(el, cb1);
+    registry.observe(el, cb2);
+    expect(mockObserver.observe).toHaveBeenCalledTimes(1);
+
+    recordsCallback?.([{ target: el, isIntersecting: true }]);
+    expect(cb1).toHaveBeenCalledTimes(1);
+    expect(cb2).toHaveBeenCalledTimes(1);
+
+    stop1();
+    expect(mockObserver.unobserve).toHaveBeenCalledTimes(0);
+
+    recordsCallback?.([{ target: el, isIntersecting: false }]);
+    expect(cb1).toHaveBeenCalledTimes(1); // Not called again
+    expect(cb2).toHaveBeenCalledTimes(2);
+  });
+
+  it('stopping the last callback unobserves', () => {
+    let recordsCallback: ((records: { target: Element; isIntersecting: boolean }[]) => void) | null = null;
+    const mockObserver = {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+    };
+    const registry = createVisibilityRegistry((cb) => {
+      recordsCallback = cb;
+      return mockObserver;
+    });
+
+    const el = {} as Element;
+    const cb1 = vi.fn();
+
+    const stop1 = registry.observe(el, cb1);
+    expect(mockObserver.observe).toHaveBeenCalledTimes(1);
+    expect(mockObserver.unobserve).toHaveBeenCalledTimes(0);
+
+    stop1();
+    expect(mockObserver.unobserve).toHaveBeenCalledTimes(1);
+  });
+
+  it('callback added after notification is immediately called with last known visibility', () => {
+    let recordsCallback: ((records: { target: Element; isIntersecting: boolean }[]) => void) | null = null;
+    const mockObserver = {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+    };
+    const registry = createVisibilityRegistry((cb) => {
+      recordsCallback = cb;
+      return mockObserver;
+    });
+
+    const el = {} as Element;
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+
+    registry.observe(el, cb1);
+
+    // Simulate IntersectionObserver notification
+    recordsCallback?.([{ target: el, isIntersecting: true }]);
+    expect(cb1).toHaveBeenCalledWith(true);
+
+    // Register second callback - should be immediately called with last known visibility
+    registry.observe(el, cb2);
+    expect(cb2).toHaveBeenCalledWith(true);
+
+    // Simulate another notification
+    recordsCallback?.([{ target: el, isIntersecting: false }]);
+    expect(cb1).toHaveBeenCalledTimes(2);
+    expect(cb2).toHaveBeenCalledTimes(2);
   });
 });

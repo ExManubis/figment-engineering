@@ -19,6 +19,10 @@ export interface SchedulerDeps {
   onError(err: unknown): void;
 }
 
+export interface VisibilityRegistry {
+  observe(el: Element, cb: (visible: boolean) => void): () => void;
+}
+
 interface Entry {
   a: Animation;
   visible: boolean;
@@ -70,32 +74,60 @@ export function createScheduler(deps: SchedulerDeps) {
   };
 }
 
-let browser: ReturnType<typeof createScheduler> | null = null;
-
-function browserScheduler() {
-  if (browser) return browser;
+export function createVisibilityRegistry(
+  makeObserver: (onRecords: (records: { target: Element; isIntersecting: boolean }[]) => void) => { observe(el: Element): void; unobserve(el: Element): void }
+): VisibilityRegistry {
   const callbacks = new Map<Element, Set<(v: boolean) => void>>();
-  const io = new IntersectionObserver((records) => {
+  const lastKnownVisibility = new Map<Element, boolean>();
+
+  const observer = makeObserver((records) => {
     for (const r of records) {
+      lastKnownVisibility.set(r.target, r.isIntersecting);
       callbacks.get(r.target)?.forEach((cb) => cb(r.isIntersecting));
     }
   });
-  browser = createScheduler({
-    raf: (cb) => { requestAnimationFrame(cb); },
-    observe: (el, cb) => {
+
+  return {
+    observe(el: Element, cb: (visible: boolean) => void): () => void {
       if (!callbacks.has(el)) {
         callbacks.set(el, new Set());
-        io.observe(el);
+        observer.observe(el);
       }
       callbacks.get(el)!.add(cb);
+
+      // Immediately call with last known visibility if we have it
+      if (lastKnownVisibility.has(el)) {
+        cb(lastKnownVisibility.get(el)!);
+      }
+
       return () => {
         callbacks.get(el)!.delete(cb);
         if (callbacks.get(el)!.size === 0) {
           callbacks.delete(el);
-          io.unobserve(el);
+          lastKnownVisibility.delete(el);
+          observer.unobserve(el);
         }
       };
     },
+  };
+}
+
+let browser: ReturnType<typeof createScheduler> | null = null;
+
+function browserScheduler() {
+  if (browser) return browser;
+  const registry = createVisibilityRegistry((onRecords) => {
+    const io = new IntersectionObserver((records) => {
+      onRecords(records.map((r) => ({ target: r.target, isIntersecting: r.isIntersecting })));
+    });
+    return {
+      observe: (el) => io.observe(el),
+      unobserve: (el) => io.unobserve(el),
+    };
+  });
+  browser = createScheduler({
+    raf: (cb) => { requestAnimationFrame(cb); },
+    observe: (el, cb) => registry.observe(el, cb),
     onError: reportError,
   });
   return browser;
