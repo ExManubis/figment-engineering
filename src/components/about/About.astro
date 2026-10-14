@@ -16,7 +16,7 @@ const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 				{/* `$ whoami` answered by the name, typed in by the script; screen readers get the name once, as text */}
 				<div data-whoami>
 					<p class="text-[14px] text-muted" aria-hidden="true">$ whoami</p>
-					<p class="mt-2 text-[28px] leading-[1.2] sm:text-[36px]">
+					<p class="font-display mt-2 text-[40px] leading-[1] sm:text-[52px]">
 						<span class="sr-only">{NAME}</span><span aria-hidden="true"><span data-whoami-name>{NAME}</span><span class="cursor" data-whoami-cursor></span></span>
 					</p>
 				</div>

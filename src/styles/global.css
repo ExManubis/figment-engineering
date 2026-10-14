@@ -6,12 +6,27 @@
   font-display: swap;
 }
 
+/* display faces: Jersey 15 Charted for the non-ASCII section headers (the About name, the wallpaper filename),
+   Bitcount Prop Single for the name itself (the hero title and the nav wordmark) */
+@font-face {
+  font-family: 'Jersey 15 Charted';
+  src: url('/fonts/Jersey15Charted-Regular.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Bitcount Prop Single';
+  src: url('/fonts/BitcountPropSingle-Regular.woff2') format('woff2');
+  font-display: swap;
+}
+
 @theme {
   --color-bg: #0A0A0A;
   --color-fg: #EDEDED;
   --color-muted: #7A7A7A;
   --color-subtle: #2A2A2A;
   --font-mono: 'Departure Mono', ui-monospace, Menlo, monospace;
+  --font-display: 'Jersey 15 Charted', 'Departure Mono', ui-monospace, monospace;
+  --font-brand: 'Bitcount Prop Single', 'Departure Mono', ui-monospace, monospace;
 }
 
 @layer base {
