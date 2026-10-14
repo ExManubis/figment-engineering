@@ -1,0 +1,22 @@
+---
+import { ansiShadow } from '../../lib/type/figlet';
+
+interface Props { text: string }
+const art = ansiShadow(Astro.props.text);
+// widest line in characters, so a brand gradient can span the lettering rather than the whole box
+const cols = Math.max(...art.split('\n').map((l) => l.trimEnd().length));
+---
+
+<pre class="ascii-header" data-ascii-header aria-hidden="true" style={`--cols: ${cols}`}>{art}</pre>
+
+<style>
+	.ascii-header {
+		margin: 0;
+		font-size: 14px;
+		line-height: 1;
+		white-space: pre;
+		overflow: hidden;
+		color: var(--color-fg);
+		transition: color 0.6s;
+	}
+</style>

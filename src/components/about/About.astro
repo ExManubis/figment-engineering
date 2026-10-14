@@ -1,0 +1,32 @@
+---
+import DecodeFrame from '../frame/DecodeFrame.astro';
+import AsciiHeader from '../type/AsciiHeader.astro';
+
+interface Props { index: number }
+const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
+---
+
+<section id="about" aria-labelledby="about-title" class="mx-auto w-full max-w-[1200px] px-6">
+	<DecodeFrame label={label}>
+		<h2 id="about-title" class="sr-only">About</h2>
+		<div class="grid items-start gap-10 sm:grid-cols-[auto_1fr]">
+			<canvas class="no-js-hide mx-auto block max-w-full" data-portrait aria-hidden="true"></canvas>
+			<div class="min-w-0">
+				<AsciiHeader text="About" />
+				<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6]">
+					I'm Mikkel Jørgensen, Design // AI Engineer at <a class="link" href="https://smallclaims.ai">smallclaims</a> in
+					Copenhagen. Pixel Perfection is what happens after hours: tools I wanted to exist, made with more care than anyone
+					asked for.
+				</p>
+			</div>
+		</div>
+	</DecodeFrame>
+</section>
+
+<script>
+	import { mountPortrait } from '../../lib/portrait/mount';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLCanvasElement>('[data-portrait]').forEach((c) => {
+		try { mountPortrait(c); } catch (err) { reportError(err); }
+	});
+</script>

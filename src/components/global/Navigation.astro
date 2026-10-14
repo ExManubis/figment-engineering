@@ -1,39 +1,23 @@
----
-import logo from '../../assets/pixel-perfection-logo.svg';
----
-
-<header class="flex items-center justify-between z-10 relative">
-	<a href="/" class="logo flex items-center gap-3 opacity-0">
-		<img src={logo.src} width="18" height="21" alt="" aria-hidden="true" />
-		<span class="font-display text-md tracking-wide text-cream"
-			>Pixel Perfection</span
-		>
-	</a>
-	<nav class="header-nav flex items-center gap-8 opacity-0 max-sm:gap-5">
-		<a
-			href="#"
-			class="hidden text-[13px] text-cream/40 transition-opacity duration-300 hover:opacity-90"
-			>Work</a
-		>
-		<a
-			href="#"
-			class="hidden text-[13px] text-cream/40 transition-opacity duration-300 hover:opacity-90"
-			>About</a
-		>
-		<a
-			href="#"
-			class="hidden text-[13px] text-cream/40 transition-opacity duration-300 hover:opacity-90"
-			>Contact</a
-		>
+<header class="fixed inset-x-0 top-0 z-50 bg-bg/90 backdrop-blur-sm">
+	<nav aria-label="Main" class="label mx-auto flex h-20 max-w-[1200px] items-center justify-between px-6">
+		<a href="#top" data-nav-logo-link class="flex items-center gap-3 text-fg no-underline">
+			<canvas class="no-js-hide size-14" data-nav-logo aria-hidden="true"></canvas>
+			<img class="js-hide size-14" src="/favicon.svg" alt="" width="56" height="56" />
+			<span class="max-[480px]:sr-only">Pixel Perfection</span>
+		</a>
+		<ul class="flex gap-6 sm:gap-8">
+			<li><a class="link no-underline" href="#work">Work</a></li>
+			<li><a class="link no-underline" href="#about">About</a></li>
+			<li><a class="link no-underline" href="#contact">Contact</a></li>
+		</ul>
 	</nav>
 </header>
 
-<style>
-	.logo {
-		animation: slideDown 0.6s ease forwards 0.15s;
+<script>
+	import { mountNavLogo } from '../../lib/logo/nav';
+	import { reportError } from '../../lib/report';
+	const canvas = document.querySelector<HTMLCanvasElement>('[data-nav-logo]');
+	if (canvas) {
+		try { mountNavLogo(canvas); } catch (err) { reportError(err); }
 	}
-
-	.header-nav {
-		animation: slideDown 0.6s ease forwards 0.25s;
-	}
-</style>
+</script>

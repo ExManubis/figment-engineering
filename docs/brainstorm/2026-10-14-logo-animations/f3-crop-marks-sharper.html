@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>F3 · Crop marks in 3D — sharper</title>
+<style>
+  @font-face { font-family:'Departure Mono'; src:url('DepartureMono.woff2') format('woff2'); }
+  * { box-sizing:border-box; margin:0; }
+  body { background:#050505; color:#ddd; font-family:'Departure Mono',monospace; padding:32px 40px 60px; }
+  .intro h1 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; }
+  .intro p { color:#777; font-size:13px; margin:10px 0 22px; max-width:1000px; line-height:1.7; }
+  .intro b { color:#ddd; font-weight:400; }
+  .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+  .opt { cursor:pointer; outline:1px solid #1a1a1a; background:#0A0A0A; transition:outline-color .2s; min-width:0; }
+  .opt.selected { outline:2px solid #fff; }
+  .anim { height:470px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .stack { position:relative; }
+  .stack pre { font-family:'Departure Mono'; white-space:pre; margin:0; }
+  .stack pre + pre { position:absolute; inset:0; }
+  .k { padding:12px 16px 16px; border-top:1px solid #141414; }
+  .k h3 { font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:400; color:#ddd; }
+  .k p { font-size:11.5px; color:#666; margin-top:6px; line-height:1.55; }
+</style>
+</head>
+<body>
+  <div class="intro">
+    <h1>F3 · Crop marks in 3D — sharper</h1>
+    <p>
+      <b>Four sharper takes on F3.</b> A is the same ray-traced dot render at roughly three times the resolution. B to D drop ray-tracing and project
+      the actual 3D lines onto the grid, so every arm is exactly one dot or one character wide and the edges stay crisp at any angle.
+      Brightness follows depth: near parts are white, far parts fade into the grid.
+    </p>
+  </div>
+  <div class="grid" id="grid"></div>
+
+<script>
+window.toggleSelect = el => el.classList.toggle('selected');
+// ---------- shared 3D ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const rY = (x, z, a) => [x * Math.cos(a) + z * Math.sin(a), -x * Math.sin(a) + z * Math.cos(a)];
+const rX = (y, z, b) => [y * Math.cos(b) - z * Math.sin(b), y * Math.sin(b) + z * Math.cos(b)];
+const toWorld = (x, y, z, a, b) => { const [y1, z1] = rX(y, z, b); const [x2, z2] = rY(x, z1, a); return [x2, y1, z2]; };
+const toObj = (x, y, z, a, b) => { const [x1, z1] = rY(x, z, -a); const [y2, z2] = rX(y, z1, -b); return [x1, y2, z2]; };
+const cam = t => [t * 0.35, -0.55 + Math.sin(t * 0.4) * 0.2];
+const S = 1.0, ARM = 0.36, CUBE = 0.28;
+const Lx = -0.55, Ly = 0.7, Lz = -0.45, Ll = Math.hypot(Lx, Ly, Lz);
+
+// 24 crop-mark segments: three arms per corner, running back along the cube edges
+const SEGS = [];
+for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+  const c = [sx * S, sy * S, sz * S];
+  SEGS.push([c, [sx * (S - ARM), sy * S, sz * S]], [c, [sx * S, sy * (S - ARM), sz * S]], [c, [sx * S, sy * S, sz * (S - ARM)]]);
+}
+// the centre pixel: cube with its own spin, in object space
+function cubeGeom(t) {
+  const xf = (x, y, z) => { const [y1, z1] = rX(y, z, -0.6); const [x2, z2] = rY(x, z1, t * 1.1); return [x2, y1, z2]; };
+  const v = [];
+  for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) v.push(xf(x * CUBE, y * CUBE, z * CUBE));
+  const idx = (x, y, z) => ((x + 1) / 2) * 4 + ((y + 1) / 2) * 2 + (z + 1) / 2;
+  const faces = [
+    [[1, -1, -1], [1, 1, -1], [1, 1, 1], [1, -1, 1]], [[-1, -1, -1], [-1, -1, 1], [-1, 1, 1], [-1, 1, -1]],
+    [[-1, 1, -1], [-1, 1, 1], [1, 1, 1], [1, 1, -1]], [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1]],
+    [[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]], [[-1, -1, -1], [-1, 1, -1], [1, 1, -1], [1, -1, -1]],
+  ].map(f => f.map(([x, y, z]) => v[idx(x, y, z)]));
+  const edges = [];
+  for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) { const d = Math.hypot(v[i][0] - v[j][0], v[i][1] - v[j][1], v[i][2] - v[j][2]); if (Math.abs(d - CUBE * 2) < 1e-6) edges.push([v[i], v[j]]); }
+  return { faces, edges };
+}
+
+// ---------- grid canvas: cells with level (0..3) + char, z-buffered ----------
+function makeGrid(W, H) { return { W, H, lv: new Int8Array(W * H).fill(-1), ch: new Array(W * H).fill(' '), z: new Float32Array(W * H).fill(Infinity) }; }
+function plot(g, i, j, z, lv, ch) { if (i < 0 || j < 0 || i >= g.W || j >= g.H) return; const k = j * g.W + i; if (z < g.z[k]) { g.z[k] = z; g.lv[k] = lv; g.ch[k] = ch; } }
+const depthLevel = z => z < -0.35 ? 2 : z < 0.45 ? 1 : 0;
+function project(p, a, b, view) { const [x, y, z] = toWorld(...p, a, b); return [view.W / 2 - 0.5 + x / view.sx, view.H / 2 - 0.5 - y / view.sy, z]; }
+function line(g, A, B, chFor) {
+  const n = Math.ceil(Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1]))) * 2 + 1;
+  for (let s = 0; s <= n; s++) { const u = s / n; const x = A[0] + (B[0] - A[0]) * u, y = A[1] + (B[1] - A[1]) * u, z = A[2] + (B[2] - A[2]) * u; plot(g, Math.round(x), Math.round(y), z, depthLevel(z), chFor(A, B)); }
+}
+function fillFace(g, P, z, lv, ch) {
+  const ys = P.map(p => p[1]), y0 = Math.ceil(Math.min(...ys)), y1 = Math.floor(Math.max(...ys));
+  for (let y = y0; y <= y1; y++) {
+    const xs = [];
+    for (let k = 0; k < P.length; k++) { const a = P[k], b = P[(k + 1) % P.length]; if ((a[1] <= y && b[1] > y) || (b[1] <= y && a[1] > y)) xs.push(a[0] + (y - a[1]) / (b[1] - a[1]) * (b[0] - a[0])); }
+    xs.sort((m, n) => m - n);
+    for (let q = 0; q + 1 < xs.length; q += 2) for (let x = Math.ceil(xs[q]); x <= Math.floor(xs[q + 1]); x++) plot(g, x, y, z, lv, ch);
+  }
+}
+const slopeChar = aspect => (A, B) => {
+  const dx = (B[0] - A[0]), dy = (B[1] - A[1]) / aspect; // undo cell aspect
+  const ang = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
+  if (ang < 22.5 || ang > 157.5) return '─';
+  if (ang > 67.5 && ang < 112.5) return '│';
+  return (dx * dy > 0) ? '╲' : '╱';
+};
+
+// ---------- variants ----------
+const VARIANTS = [
+  {
+    id: 'hires', name: 'A · Hi-res dots',
+    desc: 'Same ray-traced look as F3, at about three times the resolution with finer dots. Edges get much cleaner, but it is still the softest of the four.',
+    W: 120, H: 78, font: 5, ls: 1.5, lh: 5.6, bg: '·', mode: 'ray',
+  },
+  {
+    id: 'vector-dots', name: 'B · Vector dots, depth-lit',
+    desc: 'Every arm is a one-dot line projected from 3D, so it stays crisp from any angle. Near arms are white and far ones fade into the grid. The pixel is a solid cube, flat-shaded per face.',
+    W: 96, H: 62, font: 6, ls: 2, lh: 7, bg: '·', mode: 'vector', lineCh: () => '●', faceCh: '●',
+  },
+  {
+    id: 'vector-ascii', name: 'C · Line characters',
+    desc: 'The arms are drawn with box-drawing characters ─ │ ╱ ╲ chosen by each line\'s angle on screen, and the pixel is filled with shaded ASCII. Technical-drawing sharp; the most "terminal".',
+    W: 78, H: 40, font: 11, ls: 0, lh: 11.5, bg: ' ', mode: 'vector', lineCh: 'slope', faceCh: 'ramp', cornerCh: '+',
+  },
+  {
+    id: 'wire', name: 'D · Blueprint',
+    desc: 'Everything as one-dot lines: the crop marks and the pixel\'s edges. The pixel is drawn as a wireframe with hidden edges dimmed. The lightest and most precise.',
+    W: 96, H: 62, font: 6, ls: 2, lh: 7, bg: '·', mode: 'wire', lineCh: () => '●',
+  },
+];
+
+// ray-marched SDF (variant A)
+const len3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+function sdBox(x, y, z, bx, by, bz) { const qx = Math.abs(x) - bx, qy = Math.abs(y) - by, qz = Math.abs(z) - bz; return len3(Math.max(qx, 0), Math.max(qy, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qy, qz), 0); }
+function sdfF3(x, y, z, t) {
+  const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z), th = 0.035;
+  const c = Math.min(sdBox(ax - (S - ARM / 2), ay - S, az - S, ARM / 2, th, th), sdBox(ax - S, ay - (S - ARM / 2), az - S, th, ARM / 2, th), sdBox(ax - S, ay - S, az - (S - ARM / 2), th, th, ARM / 2));
+  const [px, pz] = rY(x, z, -t * 1.1); const [py, pz2] = rX(y, pz, 0.6);
+  return Math.min(c, sdBox(px, py, pz2, CUBE, CUBE, CUBE));
+}
+
+const grid = document.getElementById('grid');
+const views = VARIANTS.map(v => {
+  grid.insertAdjacentHTML('beforeend', `
+    <div class="opt" data-choice="${v.id}" onclick="toggleSelect(this)">
+      <div class="anim"><div class="stack" id="st-${v.id}">${['#1E1E1E', '#4A4A4A', '#9A9A9A', '#F2F2F2'].map(c => `<pre style="color:${c};font-size:${v.font}px;letter-spacing:${v.ls}px;line-height:${v.lh}px"></pre>`).join('')}</div></div>
+      <div class="k"><h3>${v.name}</h3><p>${v.desc}</p></div>
+    </div>`);
+  const pres = [...document.querySelectorAll(`#st-${v.id} pre`)];
+  pres[0].textContent = Array.from({ length: v.H }, () => v.bg.repeat(v.W)).join('\n');
+  return { v, layers: pres.slice(1), aspect: 0.8 };
+});
+
+const RAMP = '.:-=+*#%@';
+function render(view, t) {
+  const { v, layers, aspect } = view;
+  const [a, b] = cam(t);
+  const span = 2.15;
+  view.sx = span / (v.W / 2); view.sy = view.sx / aspect; view.W = v.W; view.H = v.H;
+  const g = makeGrid(v.W, v.H);
+
+  if (v.mode === 'ray') {
+    const [dx, dy, dz] = toObj(0, 0, 1, a, b);
+    const f = (x, y, z) => sdfF3(x, y, z, t);
+    for (let j = 0; j < v.H; j++) for (let i = 0; i < v.W; i++) {
+      const [ox, oy, oz] = toObj((i - v.W / 2 + 0.5) * view.sx, -(j - v.H / 2 + 0.5) * view.sy, -4, a, b);
+      let tt = 0, hit = false;
+      for (let k = 0; k < 64 && tt < 8; k++) { const d = f(ox + dx * tt, oy + dy * tt, oz + dz * tt); if (d < 0.002) { hit = true; break; } tt += Math.max(d * 0.8, 0.003); }
+      if (!hit) continue;
+      const px = ox + dx * tt, py = oy + dy * tt, pz = oz + dz * tt, e = 0.003;
+      const nx = f(px + e, py, pz) - f(px - e, py, pz), ny = f(px, py + e, pz) - f(px, py - e, pz), nz = f(px, py, pz + e) - f(px, py, pz - e), nl = Math.hypot(nx, ny, nz) || 1;
+      const [wx, wy, wz] = toWorld(nx / nl, ny / nl, nz / nl, a, b);
+      const lum = 0.1 + 0.9 * Math.max(0, (wx * Lx + wy * Ly + wz * Lz) / Ll);
+      plot(g, i, j, 0, lum > 0.62 ? 2 : lum > 0.32 ? 1 : 0, '●');
+    }
+  } else {
+    const chFor = v.lineCh === 'slope' ? slopeChar(aspect * (v.W / v.W)) : v.lineCh;
+    for (const [A, B] of SEGS) line(g, project(A, a, b, view), project(B, a, b, view), chFor);
+    if (v.cornerCh) for (const [A] of SEGS) { const P = project(A, a, b, view); plot(g, Math.round(P[0]), Math.round(P[1]), P[2] - 0.01, depthLevel(P[2]), v.cornerCh); }
+    const { faces, edges } = cubeGeom(t);
+    if (v.mode === 'vector') {
+      for (const f of faces) {
+        const W3 = f.map(p => toWorld(...p, a, b));
+        const ux = W3[1][0] - W3[0][0], uy = W3[1][1] - W3[0][1], uz = W3[1][2] - W3[0][2];
+        const vx = W3[3][0] - W3[0][0], vy = W3[3][1] - W3[0][1], vz = W3[3][2] - W3[0][2];
+        let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const nl = Math.hypot(nx, ny, nz); nx /= nl; ny /= nl; nz /= nl;
+        const cx = W3.reduce((s, p) => s + p[0], 0) / 4, cy = W3.reduce((s, p) => s + p[1], 0) / 4, cz = W3.reduce((s, p) => s + p[2], 0) / 4;
+        if (nx * cx + ny * cy + nz * cz < 0) { nx = -nx; ny = -ny; nz = -nz; } // point outward from the cube centre
+        if (nz > 0) continue; // faces pointing away from the camera
+        const lum = 0.1 + 0.9 * Math.max(0, (nx * Lx + ny * Ly + nz * Lz) / Ll);
+        const lv = lum > 0.62 ? 2 : lum > 0.32 ? 1 : 0;
+        const ch = v.faceCh === 'ramp' ? RAMP[Math.min(RAMP.length - 1, Math.floor(lum * RAMP.length))] : v.faceCh;
+        fillFace(g, f.map(p => project(p, a, b, view)), cz - 0.5, lv, ch);
+      }
+    } else {
+      for (const [A, B] of edges) {
+        const PA = project(A, a, b, view), PB = project(B, a, b, view);
+        const n = Math.ceil(Math.max(Math.abs(PB[0] - PA[0]), Math.abs(PB[1] - PA[1]))) * 2 + 1;
+        for (let s = 0; s <= n; s++) { const u = s / n, z = PA[2] + (PB[2] - PA[2]) * u; plot(g, Math.round(PA[0] + (PB[0] - PA[0]) * u), Math.round(PA[1] + (PB[1] - PA[1]) * u), z - 1, z < 0 ? 2 : 0, '●'); }
+      }
+    }
+  }
+  const rows = [[], [], []];
+  for (let j = 0; j < v.H; j++) { const r = ['', '', '']; for (let i = 0; i < v.W; i++) { const k = j * v.W + i; for (let L = 0; L < 3; L++) r[L] += g.lv[k] === L ? g.ch[k] : ' '; } for (let L = 0; L < 3; L++) rows[L].push(r[L]); }
+  layers.forEach((el, L) => el.textContent = rows[L].join('\n'));
+}
+
+document.fonts.load("8px 'Departure Mono'").then(() => {
+  views.forEach(view => {
+    const p = document.createElement('span');
+    p.style.cssText = `position:absolute;visibility:hidden;font:${view.v.font}px 'Departure Mono';letter-spacing:${view.v.ls}px;white-space:pre`;
+    p.textContent = '··········';
+    document.body.appendChild(p);
+    view.aspect = p.getBoundingClientRect().width / 10 / view.v.lh;
+    p.remove();
+  });
+  const t0 = performance.now();
+  let n = 0;
+  (function loop(now) {
+    const t = (now - t0) / 1000;
+    render(views[0], t); // the ray-traced one every frame, it is the costly one
+    render(views[1 + (n++ % 3)], t);
+    render(views[1 + (n++ % 3)], t);
+    requestAnimationFrame(loop);
+  })(t0);
+});
+</script>
+</body>
+</html>

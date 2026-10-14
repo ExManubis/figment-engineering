@@ -2,11 +2,22 @@
 import Layout from '../layouts/Layout.astro';
 import Navigation from '../components/global/Navigation.astro';
 import Hero from '../components/index/Hero.astro';
+import Showcase from '../components/work/Showcase.astro';
+import About from '../components/about/About.astro';
 import Footer from '../components/global/Footer.astro';
+import { projects } from '../data/projects';
 ---
 
 <Layout>
 	<Navigation />
-	<Hero />
+	<main class="flex flex-col gap-[140px] sm:gap-[240px]">
+		<h1 class="sr-only">Pixel Perfection</h1>
+		<Hero />
+		<div id="work" class="flex flex-col gap-[140px] sm:gap-[240px]">
+			<h2 class="sr-only">Work</h2>
+			{projects.map((project, index) => <Showcase project={project} index={index} />)}
+		</div>
+		<About index={projects.length + 1} />
+	</main>
 	<Footer />
 </Layout>
