@@ -1,8 +1,11 @@
-export const EMAIL = 'sales@figment.engineering';
+export const EMAIL = 'mikkel@figment.engineering';
+export const SMALLCLAIMS_URL = 'https://smallclaims.ai';
 
-/** X and LinkedIn are added once Mikkel supplies the URLs (spec §15). Links without a URL are not rendered. */
+/** Links without a URL are not rendered. */
 export const social: { github: string; x?: string; linkedin?: string } = {
   github: 'https://github.com/ExManubis',
+  x: 'https://x.com/bytepiratos',
+  linkedin: 'https://www.linkedin.com/in/mikkel-j%C3%B8rgensen-134316329/',
 };
 
 export function footerLinks(s = social): { label: string; href: string }[] {
@@ -11,6 +14,7 @@ export function footerLinks(s = social): { label: string; href: string }[] {
     { label: 'GitHub', href: s.github },
     { label: 'X', href: s.x },
     { label: 'LinkedIn', href: s.linkedin },
+    { label: 'smallclaims', href: SMALLCLAIMS_URL },
   ];
   return links.filter((l): l is { label: string; href: string } => Boolean(l.href));
 }

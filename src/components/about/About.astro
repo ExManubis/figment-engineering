@@ -1,8 +1,9 @@
 ---
 import DecodeFrame from '../frame/DecodeFrame.astro';
-import AsciiHeader from '../type/AsciiHeader.astro';
+import { about } from '../../data/about';
 
 interface Props { index: number }
+const NAME = 'Mikkel Jørgensen';
 const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 ---
 
@@ -10,23 +11,57 @@ const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 	<DecodeFrame label={label}>
 		<h2 id="about-title" class="sr-only">About</h2>
 		<div class="grid items-start gap-10 sm:grid-cols-[auto_1fr]">
-			<canvas class="no-js-hide mx-auto block max-w-full" data-portrait aria-hidden="true"></canvas>
+			<canvas class="portrait no-js-hide mx-auto block max-w-full" data-portrait aria-hidden="true"></canvas>
 			<div class="min-w-0">
-				<AsciiHeader text="About" />
+				{/* `$ whoami` answered by the name, typed in by the script; screen readers get the name once, as text */}
+				<div data-whoami>
+					<p class="text-[14px] text-muted" aria-hidden="true">$ whoami</p>
+					<p class="mt-2 text-[28px] leading-[1.2] sm:text-[36px]">
+						<span class="sr-only">{NAME}</span><span aria-hidden="true"><span data-whoami-name>{NAME}</span><span class="cursor" data-whoami-cursor></span></span>
+					</p>
+				</div>
 				<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6]">
-					I'm Mikkel Jørgensen, Design // AI Engineer at <a class="link" href="https://smallclaims.ai">smallclaims</a> in
+					Design // AI Engineer at <a class="link" href="https://smallclaims.ai">smallclaims</a> in
 					Copenhagen. Figment Engineering is what happens after hours: tools I wanted to exist, made with more care than anyone
 					asked for.
 				</p>
+				{/* columns as wide as fit: three beside a desktop portrait, stacked when it's narrow */}
+				<div class="mt-12 grid gap-10 grid-cols-[repeat(auto-fit,minmax(13rem,1fr))]">
+					<div>
+						<h3 class="label text-muted">Now</h3>
+						<ul class="lines mt-4 grid gap-2 text-[14px] leading-[1.5]">{about.now.map((l) => <li>{l}</li>)}</ul>
+					</div>
+					<div>
+						<h3 class="label text-muted">Toolbox</h3>
+						<ul class="mt-4 flex flex-wrap gap-2 text-[13px]">{about.toolbox.map((t) => <li class="tool">{t}</li>)}</ul>
+					</div>
+					<div>
+						<h3 class="label text-muted">Principles</h3>
+						<ul class="lines mt-4 grid gap-2 text-[14px] leading-[1.5]">{about.principles.map((l) => <li>{l}</li>)}</ul>
+					</div>
+				</div>
 			</div>
 		</div>
 	</DecodeFrame>
 </section>
 
 <script>
-	import { mountPortrait } from '../../lib/portrait/mount';
+	import { mountPortrait, mountWhoami } from '../../lib/portrait/mount';
 	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-whoami]').forEach((el) => {
+		try { mountWhoami(el); } catch (err) { reportError(err); }
+	});
 	document.querySelectorAll<HTMLCanvasElement>('[data-portrait]').forEach((c) => {
 		try { mountPortrait(c); } catch (err) { reportError(err); }
 	});
 </script>
+
+<style>
+	.lines > li { padding-left: 1.25em; text-indent: -1.25em; }
+	.lines > li::before { content: '› '; color: var(--color-muted); }
+	/* a block the height of a capital, sitting on the baseline like a terminal's */
+	.cursor { display: inline-block; width: 0.6em; height: 0.9em; margin-left: 0.1em; vertical-align: -0.08em; background: var(--color-fg); }
+	.tool { border: 1px solid var(--color-subtle); padding: 2px 8px; }
+	/* the dots get pushed around by the pointer, so it shouldn't select or drag the canvas */
+	.portrait { touch-action: pan-y; user-select: none; }
+</style>

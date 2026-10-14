@@ -1,15 +1,17 @@
 ---
-import GithubPixelIcon from '../icons/GithubPixelIcon.astro';
+import PixelIcon from '../icons/PixelIcon.astro';
 import { footerLinks } from '../../data/site';
 
-const isGithub = (href: string) => href.startsWith('https://github.com/');
+const ICONS: Record<string, 'github' | 'x' | 'linkedin' | 'smallclaims'> = { GitHub: 'github', X: 'x', LinkedIn: 'linkedin', smallclaims: 'smallclaims' };
+// a one-letter label next to its own logo reads as a stray character, so X shows only the icon (still named for screen readers)
+const ICON_ONLY = new Set(['X']);
 ---
 
 <footer id="contact" class="label mx-auto flex max-w-[1200px] flex-col gap-6 px-6 pt-10 pb-16 sm:flex-row sm:items-center sm:justify-between">
 	<h2 class="sr-only">Contact</h2>
 	<ul class="flex flex-wrap gap-x-8 gap-y-3">
 		{footerLinks().map((l) => (
-			<li><a class="link inline-flex items-center gap-2" href={l.href}>{isGithub(l.href) && <GithubPixelIcon />}{l.label}</a></li>
+			<li><a class="link inline-flex items-center gap-2" href={l.href}>{ICONS[l.label] && <PixelIcon name={ICONS[l.label]} />}{ICON_ONLY.has(l.label) ? <span class="sr-only">{l.label}</span> : l.label}</a></li>
 		))}
 	</ul>
 	<p class="text-muted">© 2026 Figment Engineering</p>

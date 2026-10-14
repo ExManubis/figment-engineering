@@ -5,6 +5,9 @@ export interface DotCell {
   lum: number;
   color?: string;
   alpha?: number;
+  /** offset from the cell's centre in CSS px, for dots knocked out of place */
+  dx?: number;
+  dy?: number;
 }
 
 export interface PaintSpec {
@@ -77,12 +80,13 @@ export function paintCells(ctx: CanvasRenderingContext2D, spec: PaintSpec, cells
       }
       ctx.globalAlpha = c.alpha ?? 1;
       ctx.fillStyle = c.color ?? grey(c.lum);
+      const cx = x + (c.dx ?? 0), cy = y + (c.dy ?? 0);
       if (spec.square) {
         const s = squareSize(spec, c.cov);
-        ctx.fillRect(x - s / 2, y - s / 2, s, s);
+        ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
       } else {
         ctx.beginPath();
-        ctx.arc(x, y, dotRadius(spec, c.cov), 0, Math.PI * 2);
+        ctx.arc(cx, cy, dotRadius(spec, c.cov), 0, Math.PI * 2);
         ctx.fill();
       }
     }

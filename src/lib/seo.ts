@@ -1,4 +1,4 @@
-import { EMAIL, social as defaultSocial } from '../data/site';
+import { EMAIL, SMALLCLAIMS_URL, social as defaultSocial } from '../data/site';
 
 export const SITE = {
   url: 'https://figment.engineering',
@@ -14,7 +14,7 @@ export function personJsonLd(s: { github?: string; x?: string; linkedin?: string
     '@type': 'Person',
     name: 'Mikkel Jørgensen',
     jobTitle: 'Design // AI Engineer',
-    worksFor: { '@type': 'Organization', name: 'smallclaims', url: 'https://smallclaims.ai' },
+    worksFor: { '@type': 'Organization', name: 'smallclaims', url: SMALLCLAIMS_URL },
     url: SITE.url,
     email: `mailto:${EMAIL}`,
     address: { '@type': 'PostalAddress', addressLocality: 'Copenhagen', addressCountry: 'DK' },
