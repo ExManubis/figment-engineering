@@ -74,13 +74,14 @@ interface Pose {
 **Face transforms**
 - **Squash:** the body radii become `R·(1 + squash)` horizontally and `R·(1 − squash)` vertically. The centre moves down by `0.6·(R − Ry)` so the body stays anchored to the bottom of the frame.
 - **Tilt:** eye shapes are tested in face space, which means the sample point is rotated by `−tilt` about the body centre.
-- **Bob:** applies to the body and the eyes together. This is a deliberate change from the prototype, where only the body moved.
+- **Bob:** applies to the body and the eyes together. The eyes follow the body's centre, including the squash shift, exactly as in the prototype.
 
 **Interpolation**
 Two poses are blended with `lerp(a, b, k)`:
 - Numeric fields interpolate linearly.
 - `shape` and `glint` switch at `k = 0.5`.
 - A shape change always passes through a blink (`open → 0.06`), so the swap is hidden.
+- `open` scales the vertical size of every eye shape, not just ovals. That way an arc or chevron also closes during the blink.
 
 ## 3. Expressions
 
