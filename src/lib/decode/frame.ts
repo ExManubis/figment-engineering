@@ -1,5 +1,11 @@
 import { glyph, type Rng } from './rng';
 
+/** Share of p each border cell spends as a flickering glyph before it settles. */
+export const FRAME_BAND = 0.3;
+/** Seconds to assemble a frame on gaining focus, and to dissolve it on losing focus. */
+export const ASSEMBLE_S = 1.6;
+export const DISSOLVE_S = 0.7;
+
 export interface FrameCell { x: number; y: number; ch: string; seed: number }
 export interface FrameLayout { cols: number; rows: number; cells: FrameCell[] }
 
@@ -23,12 +29,12 @@ export function layoutFrame(cols: number, rows: number, label: string, rng: Rng)
     return '│';
   };
   const n = pos.length;
-  return { cols, rows, cells: pos.map(([x, y], i) => ({ x, y, ch: ch(x, y), seed: 0.6 * (i / n) + 0.25 * rng() })) };
+  return { cols, rows, cells: pos.map(([x, y], i) => ({ x, y, ch: ch(x, y), seed: 0.5 * (i / n) + 0.2 * rng() })) };
 }
 
 export function renderFrame(layout: FrameLayout, p: number, rng: Rng): string {
   const grid = Array.from({ length: layout.rows }, () => new Array<string>(layout.cols).fill(' '));
-  for (const c of layout.cells) grid[c.y][c.x] = p >= c.seed + 0.12 ? c.ch : p >= c.seed ? glyph(rng) : ' ';
+  for (const c of layout.cells) grid[c.y][c.x] = p >= c.seed + FRAME_BAND ? c.ch : p >= c.seed ? glyph(rng) : ' ';
   return grid.map((r) => r.join('')).join('\n');
 }
 
@@ -41,4 +47,14 @@ export function scrollProgress(top: number, bottom: number, vh: number): number 
   const enter = (vh - top) / (vh * 0.28);
   const exit = bottom / (vh * 0.3);
   return Math.max(0, Math.min(1, enter, exit));
+}
+
+/** A section is in focus while it covers the middle fifth of the viewport. */
+export function inFocus(top: number, bottom: number, vh: number): boolean {
+  return top < vh * 0.6 && bottom > vh * 0.4;
+}
+
+/** Moves decode progress toward 1 while focused (over ASSEMBLE_S) and toward 0 otherwise (over DISSOLVE_S). */
+export function stepProgress(p: number, focused: boolean, dt: number): number {
+  return focused ? Math.min(1, p + dt / ASSEMBLE_S) : Math.max(0, p - dt / DISSOLVE_S);
 }

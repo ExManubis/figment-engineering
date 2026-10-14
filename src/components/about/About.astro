@@ -6,7 +6,7 @@ interface Props { index: number }
 const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 ---
 
-<section id="about" aria-labelledby="about-title" class="mx-auto w-full max-w-[960px] px-6">
+<section id="about" aria-labelledby="about-title" class="mx-auto w-full max-w-[1200px] px-6">
 	<DecodeFrame label={label}>
 		<h2 id="about-title" class="sr-only">About</h2>
 		<div class="grid items-start gap-10 sm:grid-cols-[auto_1fr]">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mulberry32 } from './rng';
-import { layoutFrame, renderFrame, scrollProgress } from './frame';
+import { ASSEMBLE_S, DISSOLVE_S, inFocus, layoutFrame, renderFrame, scrollProgress, stepProgress } from './frame';
 
 describe('layoutFrame + renderFrame', () => {
   it('draws a complete box with the label in the top border at p = 1', () => {
@@ -43,4 +43,31 @@ describe('scrollProgress', () => {
   it('stays 1 while a tall section covers the whole viewport', () => expect(scrollProgress(-500, 1500, vh)).toBe(1));
   it('ramps out through the top 30 %', () => expect(scrollProgress(-600, 150, vh)).toBeCloseTo(0.5));
   it('is 0 above the viewport', () => expect(scrollProgress(-900, -1, vh)).toBe(0));
+});
+
+describe('inFocus', () => {
+  const vh = 1000;
+  it('is false while the section is still below the middle', () => expect(inFocus(650, 1400, vh)).toBe(false));
+  it('is true once its top passes 60 % of the viewport', () => expect(inFocus(550, 1300, vh)).toBe(true));
+  it('stays true while a tall section covers the middle', () => expect(inFocus(-800, 1200, vh)).toBe(true));
+  it('is false once its bottom rises above 40 %', () => expect(inFocus(-800, 350, vh)).toBe(false));
+});
+
+describe('stepProgress', () => {
+  it('assembles over ASSEMBLE_S while focused', () => {
+    expect(stepProgress(0, true, ASSEMBLE_S / 2)).toBeCloseTo(0.5);
+    expect(stepProgress(0.9, true, ASSEMBLE_S)).toBe(1);
+  });
+  it('dissolves over DISSOLVE_S once focus is lost', () => {
+    expect(stepProgress(1, false, DISSOLVE_S / 2)).toBeCloseTo(0.5);
+    expect(stepProgress(0.1, false, DISSOLVE_S)).toBe(0);
+  });
+  it('holds still when no time has passed', () => expect(stepProgress(0.4, true, 0)).toBe(0.4));
+});
+
+describe('a timed frame settles exactly at p = 1', () => {
+  it('has no cell still scrambling at p = 1 on a large frame', () => {
+    const layout = layoutFrame(140, 50, '01 / CLAUDEWITZ', mulberry32(4));
+    expect(renderFrame(layout, 1, mulberry32(5))).toBe(renderFrame(layout, 2, mulberry32(5)));
+  });
 });

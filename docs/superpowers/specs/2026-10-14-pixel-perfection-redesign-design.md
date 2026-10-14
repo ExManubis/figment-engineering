@@ -36,7 +36,7 @@ A single scrolling page:
    > I'm Mikkel Jørgensen, Design // AI Engineer at [smallclaims](https://smallclaims.ai) in Copenhagen. Pixel Perfection is what happens after hours: tools I wanted to exist, made with more care than anyone asked for.
 5. **Footer.** Left: `SALES@PIXELPERFECTION.DEV · GITHUB · X · LINKEDIN`. Right: `© 2026 PIXEL PERFECTION`. No frame.
 
-**Layout:** content max-width ≈ 960 px, centred. Section spacing ≈ 240 px desktop, ≈ 140 px mobile. One breakpoint at 640 px: frames and ANSI headers scale down (headers shrink, never wrap), About stacks portrait above text, hero logo uses a coarser grid.
+**Layout:** content max-width 1200 px, centred (nav, hero, sections and footer share it). From 1024 px the hero is two columns (motto left, logo right) and each showcase puts its copy, features and links on the left with the demo on the right, under a full-width ANSI header. Section spacing ≈ 240 px desktop, ≈ 140 px mobile. One breakpoint at 640 px: frames and ANSI headers scale down (headers shrink, never wrap), About stacks portrait above text, hero logo uses a coarser grid.
 
 ## 3. Design system
 
@@ -100,9 +100,9 @@ Reference prototype: `docs/brainstorm/2026-10-14-logo-animations/f3-a-vs-b-refin
 
 Box-drawing frame (`┌ ─ ┐ │ └ ┘`) drawn in a `<pre>` overlay around a section's content.
 
-- **Scroll-linked progress** `p ∈ [0, 1]`: ramps 0 → 1 as the section's top travels from the bottom of the viewport to ≈ 72 % height, holds at 1, and ramps 1 → 0 as it leaves through the top ≈ 30 %. Scrolling back reverses it.
-- **Per cell:** a seed `s = 0.6 · (perimeter index / perimeter length) + 0.25 · rand` (clockwise from top-left). If `p ≥ s + 0.12` show the final box character; if `p ≥ s` show a random glyph from `!<>-_\/[]{}=+*^?#%&$@~`; otherwise a space.
-- **ANSI header** decodes in with the same rule (seeds by reading order). Body text never scrambles.
+- **Focus-timed progress** `p ∈ [0, 1]`: a section is in focus while it covers the middle fifth of the viewport (top above 60 % height, bottom below 40 %). In focus, `p` climbs 0 → 1 over 1.6 s, so the whole scramble-and-settle plays in time rather than tracking the scrollbar; out of focus it falls back to 0 over 0.7 s (the frame dissolves). A section that scrolls back into view out of focus starts at 0.
+- **Per cell:** a seed `s = 0.5 · (perimeter index / perimeter length) + 0.2 · rand` (clockwise from top-left). If `p ≥ s + 0.3` show the final box character; if `p ≥ s` show a random glyph from `!<>-_\/[]{}=+*^?#%&$@~`; otherwise a space. The 0.3 band keeps a wide run of flickering glyphs sweeping round the frame; every cell has settled at `p = 1`.
+- **ANSI header** decodes in with the same rule and the same 0.3 band (seeds by reading order). Body text never scrambles.
 - Brand colour applies while `p > 0.5`.
 - Glyph flicker updated at ≤ 30 fps; settled frames are not re-rendered. Geometry recomputed on resize.
 - RNG is seedable so output is deterministic in tests.

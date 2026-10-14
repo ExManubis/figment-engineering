@@ -24,4 +24,10 @@ describe('decodeText', () => {
     expect(mid.startsWith('abc')).toBe(true);
     expect(mid.endsWith('xyz')).toBe(false);
   });
+
+  it('settles every character by p = 1 with a wider scramble band', () => {
+    const seeds = makeTextSeeds(TEXT, mulberry32(1), 0.3);
+    expect(Math.max(...seeds)).toBeLessThanOrEqual(0.7);
+    expect(decodeText(TEXT, seeds, 1, mulberry32(2), 0.3)).toBe(TEXT);
+  });
 });

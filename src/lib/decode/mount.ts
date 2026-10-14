@@ -1,7 +1,7 @@
 import { prefersReducedMotion, register, type Handle } from '../motion/scheduler';
 import { reportError } from '../report';
 import { fitPre } from '../type/fit';
-import { layoutFrame, renderFrame, scrollProgress, type FrameLayout } from './frame';
+import { FRAME_BAND, inFocus, layoutFrame, renderFrame, stepProgress, type FrameLayout } from './frame';
 import { hashString, mulberry32 } from './rng';
 import { decodeText, makeTextSeeds } from './text';
 
@@ -28,6 +28,7 @@ function mountOne(el: HTMLElement): void {
     seeds: [] as number[],
   }));
   let layout: FrameLayout = { cols: 0, rows: 0, cells: [] };
+  let p = 0;
   let lastP = -1;
   let handle: Handle | undefined;
   let failed = false;
@@ -49,7 +50,7 @@ function mountOne(el: HTMLElement): void {
     for (const h of headers) {
       h.el.textContent = h.text;
       fitPre(h.el, HEADER_MAX_PX);
-      h.seeds = makeTextSeeds(h.text, rng);
+      h.seeds = makeTextSeeds(h.text, rng, FRAME_BAND);
     }
     lastP = -1;
   };
@@ -71,14 +72,20 @@ function mountOne(el: HTMLElement): void {
     handle = register({
       el,
       fps: 30,
-      frame: () => {
+      // Progress is timed rather than scroll-linked: the frame plays its full scramble-and-settle
+      // when the section comes into focus, and dissolves when it leaves.
+      frame: (_t, dt) => {
         try {
           const r = el.getBoundingClientRect();
-          const p = reduced ? 1 : scrollProgress(r.top, r.bottom, window.innerHeight);
+          const focused = inFocus(r.top, r.bottom, window.innerHeight);
+          // dt is 0 on the first frame after the section scrolls back into view: start dissolved
+          // unless it is already in focus, so a quick scroll past never shows a stale frame
+          if (dt === 0 && !focused) p = 0;
+          p = reduced ? 1 : stepProgress(p, focused, dt);
           if ((p <= 0 || p >= 1) && p === lastP) return;
           lastP = p;
           border.textContent = renderFrame(layout, p, rng);
-          for (const h of headers) h.el.textContent = decodeText(h.text, h.seeds, p, rng);
+          for (const h of headers) h.el.textContent = decodeText(h.text, h.seeds, p, rng, FRAME_BAND);
           el.toggleAttribute('data-active', p > 0.5);
         } catch (err) {
           fail(err);
