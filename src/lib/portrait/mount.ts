@@ -31,7 +31,7 @@ export function mountPortrait(canvas: HTMLCanvasElement): void {
     const draw = (revealed: number) => {
       const out: (DotCell | undefined)[] = cells.map((v, k) => {
         if (v <= 0) return undefined;
-        if (seeds[k] <= revealed) return { cov: 1, lum: v };
+        if (seeds[k] <= revealed) return { cov: 0.35 + 0.65 * v, lum: v };
         return rng() < 0.15 ? { cov: 0.6, lum: rng() * 0.4 } : undefined; // noise before it resolves
       });
       paintCells(ctx, spec, out);

@@ -65,8 +65,12 @@ describe('mountPortrait', () => {
     expect(m.register).not.toHaveBeenCalled();
     expect(m.paintCells).toHaveBeenCalledTimes(1);
     const cells = m.paintCells.mock.calls[0][2] as ({ cov: number } | undefined)[];
-    expect(cells.filter((c) => c && c.cov === 1)).toHaveLength(lit);
+    const vals = portrait.cells as number[];
     expect(cells.filter(Boolean)).toHaveLength(lit);
+    vals.forEach((v, k) => {
+      if (v > 0) expect(cells[k]!.cov).toBeCloseTo(0.35 + 0.65 * v, 10);
+      else expect(cells[k]).toBeUndefined();
+    });
   });
 
   it('once fully revealed, later frames do not repaint', () => {
@@ -77,5 +81,32 @@ describe('mountPortrait', () => {
     const n = m.paintCells.mock.calls.length;
     anim.frame(2); anim.frame(3);
     expect(m.paintCells).toHaveBeenCalledTimes(n);
+  });
+
+  it('latches: once revealed, scrolling out does not repaint back to noise', () => {
+    m.register.mockReturnValue({ stop: vi.fn() });
+    const rect = { top: 0, bottom: 800 };
+    const frame = { getBoundingClientRect: () => rect };
+    mountPortrait({ hidden: false, closest: () => frame } as unknown as HTMLCanvasElement);
+    const anim = m.register.mock.calls[0][0] as { frame: (now: number) => void };
+    anim.frame(1); // progress 1
+    const n = m.paintCells.mock.calls.length;
+    rect.top = -2000; rect.bottom = -1000; // progress 0
+    anim.frame(2); anim.frame(3);
+    expect(m.paintCells).toHaveBeenCalledTimes(n);
+    const last = m.paintCells.mock.calls[n - 1][2] as unknown[];
+    expect(last.filter(Boolean)).toHaveLength(lit);
+  });
+
+  it('at partial progress paints some resolved cells and some unresolved', () => {
+    m.register.mockReturnValue({ stop: vi.fn() });
+    mountPortrait(fakeCanvas({ top: 800 - 0.5 * 0.28 * 800, bottom: 800 })); // progress 0.5
+    const anim = m.register.mock.calls[0][0] as { frame: (now: number) => void };
+    anim.frame(1);
+    const cells = m.paintCells.mock.calls.at(-1)![2] as ({ cov: number; lum: number } | undefined)[];
+    const vals = portrait.cells as number[];
+    const resolved = cells.filter((c, k) => c && c.lum === vals[k] && c.cov === 0.35 + 0.65 * vals[k]).length;
+    expect(resolved).toBeGreaterThan(0);
+    expect(resolved).toBeLessThan(lit);
   });
 });
