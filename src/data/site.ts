@@ -1,4 +1,4 @@
-export const EMAIL = 'sales@pixelperfection.dev';
+export const EMAIL = 'sales@figment.engineering';
 
 /** X and LinkedIn are added once Mikkel supplies the URLs (spec §15). Links without a URL are not rendered. */
 export const social: { github: string; x?: string; linkedin?: string } = {

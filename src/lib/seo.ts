@@ -1,8 +1,8 @@
 import { EMAIL, social as defaultSocial } from '../data/site';
 
 export const SITE = {
-  url: 'https://pixelperfection.dev',
-  title: 'Pixel Perfection: Mikkel Jørgensen',
+  url: 'https://figment.engineering',
+  title: 'Figment Engineering: Mikkel Jørgensen',
   motto: "Things I make when no one's asking.",
   description:
     "Things I make when no one's asking. The after-hours work of Mikkel Jørgensen, Design // AI Engineer in Copenhagen.",
@@ -18,7 +18,7 @@ export function personJsonLd(s: { github?: string; x?: string; linkedin?: string
     url: SITE.url,
     email: `mailto:${EMAIL}`,
     address: { '@type': 'PostalAddress', addressLocality: 'Copenhagen', addressCountry: 'DK' },
-    brand: { '@type': 'Brand', name: 'Pixel Perfection', logo: `${SITE.url}/favicon.svg` },
+    brand: { '@type': 'Brand', name: 'Figment Engineering', logo: `${SITE.url}/favicon.svg` },
     sameAs: [s.github, s.x, s.linkedin].filter(Boolean),
   };
 }

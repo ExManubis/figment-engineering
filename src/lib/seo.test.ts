@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { personJsonLd, SITE } from './seo';
 
 describe('personJsonLd', () => {
-  it('describes Mikkel as a Person with the Pixel Perfection brand', () => {
+  it('describes Mikkel as a Person with the Figment Engineering brand', () => {
     const ld = personJsonLd({ github: 'https://github.com/ExManubis' }) as Record<string, any>;
     expect(ld['@type']).toBe('Person');
     expect(ld.name).toBe('Mikkel Jørgensen');
     expect(ld.jobTitle).toBe('Design // AI Engineer');
     expect(ld.worksFor.name).toBe('smallclaims');
-    expect(ld.brand.name).toBe('Pixel Perfection');
+    expect(ld.brand.name).toBe('Figment Engineering');
     expect(ld.url).toBe(SITE.url);
   });
 

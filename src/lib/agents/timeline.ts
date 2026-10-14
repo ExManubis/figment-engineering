@@ -19,14 +19,14 @@ export const STILL_MS = 4500;
 
 export const TABS: AgentTab[] = [
   {
-    id: 'claude', name: 'claude', project: 'pixel-perfection', steps: [
+    id: 'claude', name: 'claude', project: 'figment-engineering', steps: [
       { at: 0, state: 'working', detail: 'editing Hero.astro' },
       { at: 3500, state: 'permission', detail: 'wants to run Bash' },
       { at: 6500, state: 'working', detail: 'running tests' },
       { at: 9000, state: 'done', detail: '2 files changed' },
     ],
   },
-  { id: 'dev', name: 'npm run dev', project: 'pixel-perfection' },
+  { id: 'dev', name: 'npm run dev', project: 'figment-engineering' },
   {
     id: 'claudewitz', name: 'claudewitz', project: 'promptty', steps: [
       { at: 0, state: 'working', detail: 'reading Sources/' },

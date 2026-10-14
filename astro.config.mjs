@@ -9,7 +9,7 @@ import sentry from '@sentry/astro';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://pixelperfection.dev',
+  site: 'https://figment.engineering',
   vite: {
     plugins: [tailwindcss()]
   },
