@@ -2,6 +2,25 @@
 import { SITE } from '../../lib/seo';
 ---
 
-<section id="top" class="flex min-h-svh flex-col items-center justify-center gap-10 px-6 pt-20">
-	<p class="text-center text-[20px] leading-[1.4]">{SITE.motto}</p>
+<section id="top" class="flex min-h-svh flex-col items-center justify-center gap-10 px-6 pt-20" data-hero>
+	<div class="hero-logo w-full max-w-[560px]" data-hero-logo role="img" aria-label="Pixel Perfection logo">
+		<canvas class="no-js-hide block"></canvas>
+		<img class="hero-fallback" src="/logo-still.png" alt="" width="560" height="430" />
+	</div>
+	<p class="min-h-[1.4em] text-center text-[20px] leading-[1.4]" data-motto data-text={SITE.motto} aria-label={SITE.motto}>{SITE.motto}</p>
 </section>
+
+<script>
+	import { mountHero } from '../../lib/logo/hero';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-hero]').forEach((el) => {
+		try { mountHero(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	.hero-fallback { display: none; width: 100%; height: auto; }
+	:global(html:not(.js)) .hero-fallback,
+	[data-fallback] .hero-fallback { display: block; }
+	[data-fallback] canvas { display: none; }
+</style>
