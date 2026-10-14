@@ -12,23 +12,26 @@ const Demo = demos[project.demo];
 const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
 ---
 
-<section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[960px] px-6" data-copy-scope>
+<section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[1200px] px-6" data-copy-scope>
 	<DecodeFrame label={frameLabel(index, project.name)} brand={project.brand}>
 		<h3 id={`${project.id}-title`} class="sr-only">{project.name}</h3>
 		<AsciiHeader text={project.name} />
-		<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6] text-muted">{project.description}</p>
-		<div class="mt-12"><Demo /></div>
-		<ul class="mt-12 grid max-w-[40rem] gap-3 text-[15px] leading-[1.6]">
-			{project.features.map((f) => <li>{f}</li>)}
-		</ul>
-		<div class="label mt-12 flex flex-wrap gap-x-8 gap-y-4">
-			{project.links.map((l) =>
-				l.copy ? (
-					<button type="button" class="link text-left" data-copy={l.copy} data-event={l.event}>{noSlashBreaks(l.label)}</button>
-				) : (
-					<a class="link" href={l.href} target="_blank" rel="noopener">{l.label}</a>
-				),
-			)}
+		{/* desktop: copy in the left column, demo spanning the right; phones keep the source order */}
+		<div class="lg:grid lg:grid-cols-2 lg:grid-rows-[auto_auto_1fr] lg:gap-x-16">
+			<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6] text-muted lg:col-start-1 lg:row-start-1 lg:mt-10">{project.description}</p>
+			<div class="mt-12 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-10"><Demo /></div>
+			<ul class="mt-12 grid max-w-[40rem] gap-3 text-[15px] leading-[1.6] lg:col-start-1 lg:row-start-2">
+				{project.features.map((f) => <li>{f}</li>)}
+			</ul>
+			<div class="label mt-12 flex flex-wrap gap-x-8 gap-y-4 lg:col-start-1 lg:row-start-3 lg:self-start">
+				{project.links.map((l) =>
+					l.copy ? (
+						<button type="button" class="link text-left" data-copy={l.copy} data-event={l.event}>{noSlashBreaks(l.label)}</button>
+					) : (
+						<a class="link" href={l.href} target="_blank" rel="noopener">{l.label}</a>
+					),
+				)}
+			</div>
 		</div>
 		<p class="sr-only" aria-live="polite" data-copy-status></p>
 	</DecodeFrame>
