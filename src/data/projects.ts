@@ -19,6 +19,8 @@ export interface Project {
   /** 3–4 short lines */
   features: string[];
   links: ProjectLink[];
+  /** cga: the header redrawn in the style of the project's logo; default ANSI Shadow in the brand gradient */
+  header?: 'cga';
   /** short muted line beside the links, e.g. system requirements */
   note?: string;
   demo: DemoId;
@@ -57,6 +59,7 @@ export const projects: Project[] = [
       { label: 'GitHub', href: 'https://github.com/ExManubis/promptty' },
       { label: 'Download for macOS', href: 'https://github.com/ExManubis/promptty/releases/latest' },
     ],
+    header: 'cga',
     note: 'Apple silicon · macOS 26',
     demo: 'promptty',
   },
