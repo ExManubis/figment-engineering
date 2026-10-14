@@ -35,6 +35,13 @@ const NAMES: [string, string][] = [
   ['fe-motion-study', 'Motion study'],
   ['fe-homepage', 'Homepage'],
   ['fe-macro', 'Macro'],
+  ['fe-blueprint', 'Blueprint'],
+  ['fe-field', 'Field'],
+  ['fe-decode', 'Decode'],
+  ['fe-principles', 'Principles'],
+  ['fe-boot', 'Boot'],
+  ['fe-trail', 'Trail'],
+  ['fe-texture', 'Texture'],
   ['cw-bean', 'Claudewitz'],
   ['cw-dissolve', 'Claudewitz · dissolve'],
 ];

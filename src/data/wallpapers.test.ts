@@ -4,7 +4,7 @@ import { DEVICES, WALLPAPERS, downloadPath, formatBytes, previewPath, thumbPath 
 describe('wallpapers', () => {
   it('has Monolith first, then the other Figment designs, then Claudewitz', () => {
     expect(WALLPAPERS[0].id).toBe('fe-monolith');
-    expect(WALLPAPERS.map((w) => w.id.split('-')[0])).toEqual(['fe', 'fe', 'fe', 'fe', 'cw', 'cw']);
+    expect(WALLPAPERS.map((w) => w.id.split('-')[0])).toEqual([...Array(11).fill('fe'), 'cw', 'cw']);
   });
 
   it('knows every file it links to, with its size in bytes', () => {

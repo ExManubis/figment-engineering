@@ -77,14 +77,14 @@ describe('mountWallpapers', () => {
     anim.frame(20);
     expect(s.file.textContent).toBe('fe-monolith.png');
 
-    s.designs[4].click(); // Claudewitz
+    s.designs[11].click(); // Claudewitz
     s.devices[2].click(); // iPad
     expect(s.root.dataset.device).toBe('ipad');
     expect(s.previews[2].src).toBe('/wallpapers/preview/ipad/cw-bean.png');
     expect(s.download.href).toBe('/wallpapers/ipad/cw-bean.png');
     expect(s.name.textContent).toBe('Claudewitz');
     expect(s.path.textContent).toBe('~/wallpapers/ipad/');
-    expect(s.designs[4].attrs['aria-pressed']).toBe('true');
+    expect(s.designs[11].attrs['aria-pressed']).toBe('true');
     expect(s.designs[0].attrs['aria-pressed']).toBe('false');
 
     anim.frame(30);
