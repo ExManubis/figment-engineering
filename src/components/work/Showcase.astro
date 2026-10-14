@@ -14,7 +14,7 @@ const Demo = demos[project.demo];
 const noSlashBreaks = (s: string) => s.replaceAll('/', '/\u2060');
 ---
 
-<section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[1200px] px-6" data-copy-scope>
+<section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[1200px] px-6" data-copy-scope data-scroll-stop="center">
 	<DecodeFrame label={frameLabel(index, project.name)} brand={project.brand}>
 		<h3 id={`${project.id}-title`} class="sr-only">{project.name}</h3>
 		<AsciiHeader text={project.name} variant={project.header} />
