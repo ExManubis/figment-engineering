@@ -50,7 +50,7 @@ A single scrolling page:
 | `--color-subtle` | `#2A2A2A` | Idle frames, dividers |
 | dot grid | white @ ≈ 8–10 % | Background dot grid in canvases, radially faded |
 
-**Project colour:** each showcase sets `--brand` (and optional `--brand-2`) on its section element. Only the ANSI header and the decode frame use it, and only while the section's decode progress is above 0.5; otherwise they render in `--color-subtle` / `--color-fg`. Claudewitz: `--brand: #DA7756`, `--brand-2: #B497FF`; its ANSI header instead runs a left → right gradient `#DA702C → #3AA99F` across the lettering (`brand.headerGradient`), revealed when the frame goes active. Project artwork (the bean) always shows its real colours.
+**Project colour:** each showcase sets `--brand` (and optional `--brand-2`) on its section element. Only the ANSI header and the decode frame use it, and only while the section's decode progress is above 0.5; otherwise they render in `--color-subtle` / `--color-fg`. Claudewitz: `--brand: #DA7756`, `--brand-2: #B497FF`; its ANSI header and frame instead use a left → right gradient `#DA702C → #3AA99F` (`brand.gradient`; across the lettering for the header, across the whole frame for the border), revealed when the frame goes active. Project artwork (the bean) always shows its real colours.
 
 ### Typography
 

@@ -1,19 +1,19 @@
 ---
 interface Props {
 	label: string;
-	brand?: { primary: string; secondary?: string; headerGradient?: [string, string] };
+	brand?: { primary: string; secondary?: string; gradient?: [string, string] };
 }
 const { label, brand } = Astro.props;
 const style = brand
 	? [
 			`--brand: ${brand.primary};`,
 			brand.secondary && `--brand-2: ${brand.secondary};`,
-			brand.headerGradient && `--brand-header: linear-gradient(90deg, ${brand.headerGradient.join(', ')});`,
+			brand.gradient && `--brand-gradient: linear-gradient(90deg, ${brand.gradient.join(', ')});`,
 		].filter(Boolean).join(' ')
 	: undefined;
 ---
 
-<div class="decode-frame" data-decode-frame data-label={label} data-branded={brand ? '' : undefined} style={style}>
+<div class="decode-frame" data-decode-frame data-label={label} data-branded={brand ? '' : undefined} data-gradient={brand?.gradient ? '' : undefined} style={style}>
 	<pre class="decode-frame__border" aria-hidden="true"></pre>
 	<div class="decode-frame__content"><slot /></div>
 </div>
@@ -32,13 +32,20 @@ const style = brand
 	:global(.js) .decode-frame[data-mounted]:not([data-failed]) { border-color: transparent; }
 	.decode-frame[data-active][data-branded] { --frame-color: var(--brand); }
 	.decode-frame[data-active][data-branded] :global(.ascii-header) { color: var(--brand); }
-	/* the gradient sits under the glyphs the whole time; going active fades the glyph colour out to reveal it */
-	.decode-frame[data-branded][style*='--brand-header'] :global(.ascii-header) {
-		background: var(--brand-header) 0 0 / calc(var(--cols) * 1ch) 100% no-repeat;
+	/* the gradient sits under the glyphs the whole time; going active fades the glyph colour out to reveal it.
+	   The header's gradient spans its lettering, the border's the whole frame. */
+	.decode-frame[data-gradient] :global(.ascii-header) {
+		background: var(--brand-gradient) 0 0 / calc(var(--cols) * 1ch) 100% no-repeat;
 		-webkit-background-clip: text;
 		background-clip: text;
 	}
-	.decode-frame[data-active][data-branded][style*='--brand-header'] :global(.ascii-header) { color: transparent; }
+	.decode-frame[data-gradient] .decode-frame__border {
+		background: var(--brand-gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+	}
+	.decode-frame[data-active][data-gradient] { --frame-color: transparent; }
+	.decode-frame[data-active][data-gradient] :global(.ascii-header) { color: transparent; }
 	.decode-frame__border {
 		position: absolute;
 		inset: 0;
