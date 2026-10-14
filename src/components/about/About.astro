@@ -10,7 +10,7 @@ const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 	<DecodeFrame label={label}>
 		<h2 id="about-title" class="sr-only">About</h2>
 		<div class="grid items-start gap-10 sm:grid-cols-[auto_1fr]">
-			<div data-portrait-slot></div>
+			<canvas class="no-js-hide mx-auto block max-w-full" data-portrait aria-hidden="true"></canvas>
 			<div class="min-w-0">
 				<AsciiHeader text="About" />
 				<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6]">
@@ -22,3 +22,11 @@ const label = `${String(Astro.props.index).padStart(2, '0')} / ABOUT`;
 		</div>
 	</DecodeFrame>
 </section>
+
+<script>
+	import { mountPortrait } from '../../lib/portrait/mount';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLCanvasElement>('[data-portrait]').forEach((c) => {
+		try { mountPortrait(c); } catch (err) { reportError(err); }
+	});
+</script>
