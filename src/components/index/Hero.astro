@@ -2,13 +2,17 @@
 import { SITE } from '../../lib/seo';
 ---
 
-<section id="top" class="flex min-h-svh flex-col items-center justify-center gap-10 px-6 pt-20" data-hero>
+<section
+	id="top"
+	class="mx-auto flex min-h-svh w-full max-w-[1200px] flex-col items-center justify-center gap-10 px-6 pt-20 lg:grid lg:grid-cols-2 lg:gap-16"
+	data-hero
+>
 	<h2 class="sr-only">Intro</h2>
-	<div class="hero-logo w-full max-w-[560px]" data-hero-logo role="img" aria-label="Pixel Perfection logo">
+	<div class="hero-logo w-full max-w-[560px] lg:order-2 lg:justify-self-end" data-hero-logo role="img" aria-label="Pixel Perfection logo">
 		<canvas class="no-js-hide mx-auto block"></canvas>
 		<img class="hero-fallback" src="/logo-still.png" alt="" width="560" height="430" loading="lazy" />
 	</div>
-	<p class="min-h-[1.4em] text-center text-[20px] leading-[1.4]"><span class="sr-only">{SITE.motto}</span><span
+	<p class="min-h-[1.4em] text-center text-[20px] leading-[1.4] lg:order-1 lg:text-left lg:text-[36px] lg:leading-[1.25]"><span class="sr-only">{SITE.motto}</span><span
 		class="motto-decode" aria-hidden="true" data-motto-decode data-text={SITE.motto}>{SITE.motto}</span></p>
 </section>
 
