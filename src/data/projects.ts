@@ -11,8 +11,8 @@ export interface Project {
   id: string;
   /** display name; also the ANSI header text */
   name: string;
-  /** primary is the solid brand colour; gradient, when set, runs left → right across the ANSI header and the frame instead */
-  brand: { primary: string; secondary?: string; gradient?: [string, string] };
+  /** primary is the solid brand colour; gradient, when set, is a list of stops that runs left → right across the ANSI header and the frame instead */
+  brand: { primary: string; secondary?: string; gradient?: string[] };
   description: string;
   /** small square mark for the hero's link to the section */
   icon: string;
@@ -30,7 +30,7 @@ export const projects: Project[] = [
   {
     id: 'claudewitz',
     name: 'Claudewitz',
-    brand: { primary: '#DA7756', secondary: '#B497FF', gradient: ['#DA702C', '#3AA99F'] },
+    brand: { primary: '#DA7756', secondary: '#B497FF', gradient: ['#DA7756', '#D87E80', '#D286A9', '#C78ED4', '#B497FF'] },
     icon: '/icons/claudewitz.svg',
     description: 'A Crush-style terminal UI for Claude Code that runs on the subscription you already have.',
     features: [
