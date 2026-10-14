@@ -1,7 +1,7 @@
 ---
 interface Props {
 	label: string;
-	brand?: { primary: string; secondary?: string; gradient?: [string, string] };
+	brand?: { primary: string; secondary?: string; gradient?: string[] };
 }
 const { label, brand } = Astro.props;
 const style = brand
