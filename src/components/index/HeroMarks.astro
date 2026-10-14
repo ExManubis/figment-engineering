@@ -1,0 +1,28 @@
+---
+import { SMALL_CELLS } from '../../lib/logo/nav';
+import { LOCATION, WORDMARK } from '../../lib/marks/text';
+
+// the year the site was built, like the footer; the script types it out behind a cursor
+const year = `© ${new Date().getFullYear()}`;
+---
+
+{/* decorative: the name and copyright are in the nav and footer */}
+<div class="label flex w-full items-center justify-between opacity-50 lg:absolute lg:inset-x-0 lg:bottom-6 lg:px-6" data-hero-marks aria-hidden="true">
+	<canvas class="no-js-hide" data-mark-cube width={SMALL_CELLS} height={SMALL_CELLS}></canvas>
+	<img class="js-hide" src="/favicon.svg" alt="" width={SMALL_CELLS} height={SMALL_CELLS} />
+	<span class="mark" data-mark-wordmark>{WORDMARK}</span>
+	<span class="mark max-sm:hidden" data-mark-location>{LOCATION}</span>
+	<span class="mark" data-mark-copyright data-text={year}>{`${year} `}</span>
+</div>
+
+<script>
+	import { mountHeroMarks } from '../../lib/marks/mount';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-hero-marks]').forEach((el) => {
+		try { mountHeroMarks(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	.mark { white-space: pre; line-height: 1.15; }
+</style>

@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
 import { PNG } from 'pngjs';
 import { cellsToSvg } from '../src/lib/dotgrid/svg';
-import { NAV_CELLS, navLogoCells } from '../src/lib/logo/nav';
+import { navLogoCells, SMALL_CELLS } from '../src/lib/logo/nav';
 import { LOCK_CENTRE, pose } from '../src/lib/render/pose';
 import { renderLogo } from '../src/lib/render/raymarch';
 import { HERO_GEOM } from '../src/lib/render/sdf';
@@ -23,12 +23,12 @@ const greyscale = (buf: Buffer): Buffer => {
 };
 
 // favicon: the nav logo at the lock pose, square pixels, on a dark rounded square so it reads on light tabs
-const favCells = navLogoCells(LOCK_CENTRE);
-const favicon = cellsToSvg({ cols: NAV_CELLS, rows: NAV_CELLS, cell: 1, square: true, background: null }, favCells)
-  .replace(/(<svg[^>]*>)/, `$1<rect width="${NAV_CELLS}" height="${NAV_CELLS}" rx="${Math.round(NAV_CELLS * 0.2)}" fill="#0A0A0A"/>`);
+const favCells = navLogoCells(LOCK_CENTRE, SMALL_CELLS);
+const favicon = cellsToSvg({ cols: SMALL_CELLS, rows: SMALL_CELLS, cell: 1, square: true, background: null }, favCells)
+  .replace(/(<svg[^>]*>)/, `$1<rect width="${SMALL_CELLS}" height="${SMALL_CELLS}" rx="${Math.round(SMALL_CELLS * 0.2)}" fill="#0A0A0A"/>`);
 writeFileSync('public/favicon.svg', favicon);
 writeFileSync('public/favicon-32.png', png(favicon, 32));
-const touch = cellsToSvg({ cols: NAV_CELLS, rows: NAV_CELLS, cell: 1, square: true, background: '#0A0A0A' }, favCells);
+const touch = cellsToSvg({ cols: SMALL_CELLS, rows: SMALL_CELLS, cell: 1, square: true, background: '#0A0A0A' }, favCells);
 writeFileSync('public/apple-touch-icon.png', png(touch, 180));
 
 // still hero logo (no-JS + slow-device fallback): the hero render at the lock pose

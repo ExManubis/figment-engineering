@@ -5,12 +5,15 @@ import { renderLogo } from '../render/raymarch';
 import { NAV_CUBE_GEOM } from '../render/sdf';
 import { reportError } from '../report';
 
-export const NAV_CELLS = 28;
+/** The nav logo: 56 cells across 56px, one CSS px a cell. */
+export const NAV_CELLS = 56;
 export const NAV_PX = 56;
+/** The small logo (favicon, hero mark): 28 cells. */
+export const SMALL_CELLS = 28;
 const BRACKET_LUM = 0.8;
 
 /** Four still 1-cell L-brackets; corners at `margin` cells from each edge, arms `len` cells long. */
-export function hairlineBrackets(n = NAV_CELLS, margin = 3, len = 6): [number, number][] {
+export function hairlineBrackets(n = SMALL_CELLS, margin = 3, len = 6): [number, number][] {
   const out: [number, number][] = [];
   const corners: [number, number, number, number][] = [
     [margin, margin, 1, 1], [n - 1 - margin, margin, -1, 1],
@@ -23,12 +26,17 @@ export function hairlineBrackets(n = NAV_CELLS, margin = 3, len = 6): [number, n
   return out;
 }
 
-const BRACKETS = hairlineBrackets();
+/** The brackets for an n-cell logo: placed and sized as on the 28-cell one, and always one cell thick. */
+export const navBrackets = (n: number): [number, number][] =>
+  hairlineBrackets(n, Math.round((3 * n) / SMALL_CELLS), Math.round((6 * n) / SMALL_CELLS));
 
-/** The nav logo: the ray-traced cube (3 × 3 supersampled, swaying camera) inside still hairline brackets. */
-export function navLogoCells(t: number): (DotCell | undefined)[] {
-  const cells = renderLogo({ cols: NAV_CELLS, rows: NAV_CELLS, ss: 3 }, NAV_CUBE_GEOM, pose(t, 'sway'));
-  for (const [i, j] of BRACKETS) cells[j * NAV_CELLS + i] = { cov: 1, lum: BRACKET_LUM };
+/**
+ * The logo on an n × n grid: the ray-traced cube (swaying camera) inside still hairline brackets.
+ * Small grids are supersampled 3 × 3; the 56-cell nav grid 2 × 2, as its finer cells need less.
+ */
+export function navLogoCells(t: number, n = NAV_CELLS): (DotCell | undefined)[] {
+  const cells = renderLogo({ cols: n, rows: n, ss: n > SMALL_CELLS ? 2 : 3 }, NAV_CUBE_GEOM, pose(t, 'sway'));
+  for (const [i, j] of navBrackets(n)) cells[j * n + i] = { cov: 1, lum: BRACKET_LUM };
   return cells;
 }
 

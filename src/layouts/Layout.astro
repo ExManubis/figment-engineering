@@ -35,5 +35,14 @@ import { SITE, personJsonLd } from '../lib/seo';
 	</head>
 	<body class="bg-bg text-fg">
 		<slot />
+		<canvas class="pointer-events-none fixed top-0 left-0 z-[60]" data-trail aria-hidden="true"></canvas>
+		<script>
+			import { mountTrail } from '../lib/trail/mount';
+			import { reportError } from '../lib/report';
+			const canvas = document.querySelector<HTMLCanvasElement>('[data-trail]');
+			if (canvas) {
+				try { mountTrail(canvas); } catch (err) { reportError(err); }
+			}
+		</script>
 	</body>
 </html>

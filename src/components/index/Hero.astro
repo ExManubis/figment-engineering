@@ -1,10 +1,11 @@
 ---
 import { SITE } from '../../lib/seo';
+import HeroMarks from './HeroMarks.astro';
 ---
 
 <section
 	id="top"
-	class="mx-auto flex min-h-svh w-full max-w-[1200px] flex-col items-center justify-center gap-10 px-6 pt-20 lg:grid lg:grid-cols-2 lg:gap-16"
+	class="relative mx-auto flex min-h-svh w-full max-w-[1200px] flex-col items-center justify-center gap-10 px-6 pt-20 lg:grid lg:grid-cols-2 lg:gap-16"
 	data-hero
 	data-scroll-stop
 >
@@ -15,6 +16,7 @@ import { SITE } from '../../lib/seo';
 	</div>
 	<p class="min-h-[1.4em] text-center text-[20px] leading-[1.4] lg:order-1 lg:text-left lg:text-[36px] lg:leading-[1.25] xl:text-[44px] xl:leading-[1.2]"><span class="sr-only">{SITE.motto}</span><span
 		class="motto-decode" aria-hidden="true" data-motto-decode data-text={SITE.motto}>{SITE.motto}</span></p>
+	<HeroMarks />
 </section>
 
 <script>
