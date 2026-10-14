@@ -4,11 +4,9 @@ const m = vi.hoisted(() => ({
   register: vi.fn(),
   prefersReducedMotion: vi.fn(),
   reportError: vi.fn(),
-  track: vi.fn(),
 }));
 vi.mock('../motion/scheduler', () => ({ register: m.register, prefersReducedMotion: m.prefersReducedMotion }));
 vi.mock('../report', () => ({ reportError: m.reportError }));
-vi.mock('../analytics', () => ({ track: m.track }));
 
 import { mountPrompttyDemo, renderFrame } from './mount';
 import { frameAt, PANE, STILL_MS, TABS } from './timeline';
@@ -71,7 +69,6 @@ describe('mountPrompttyDemo', () => {
     expect(toast.dataset.show).toBe('true');
     (replay.addEventListener.mock.calls[0][1] as () => void)();
     expect(toast.dataset.show).toBe('false');
-    expect(m.track).toHaveBeenCalledWith('promptty_demo_replayed');
   });
 
   it('on a frame failure reports once, falls back to the still frame and stops exactly once', () => {

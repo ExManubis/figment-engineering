@@ -6,7 +6,6 @@ const m = vi.hoisted(() => ({
   setupCanvas: vi.fn(),
   paintCells: vi.fn(),
   reportError: vi.fn(),
-  track: vi.fn(),
 }));
 vi.mock('../motion/scheduler', () => ({ register: m.register, prefersReducedMotion: m.prefersReducedMotion }));
 vi.mock('../dotgrid/paint', async (orig) => ({
@@ -15,7 +14,6 @@ vi.mock('../dotgrid/paint', async (orig) => ({
   paintCells: m.paintCells,
 }));
 vi.mock('../report', () => ({ reportError: m.reportError }));
-vi.mock('../analytics', () => ({ track: m.track }));
 
 import { TRANSCRIPT } from './demo';
 import { mountClaudewitzDemo } from './mount';

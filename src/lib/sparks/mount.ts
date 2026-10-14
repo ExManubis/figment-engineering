@@ -1,5 +1,4 @@
 import bean from '../../data/claudewitz-bean.json';
-import { track } from '../analytics';
 import { mulberry32 } from '../decode/rng';
 import { paintCells, setupCanvas } from '../dotgrid/paint';
 import { prefersReducedMotion, register, type Handle } from '../motion/scheduler';
@@ -77,7 +76,6 @@ export function mountClaudewitzDemo(root: HTMLElement): void {
       if (failed) return;
       try {
         restart(performance.now() / 1000);
-        track('demo_replayed');
       } catch (err) {
         fail(err);
       }
