@@ -1,0 +1,43 @@
+---
+interface Props {
+	label: string;
+	brand?: { primary: string; secondary?: string };
+}
+const { label, brand } = Astro.props;
+const style = brand ? `--brand: ${brand.primary};${brand.secondary ? ` --brand-2: ${brand.secondary};` : ''}` : undefined;
+---
+
+<div class="decode-frame" data-decode-frame data-label={label} data-branded={brand ? '' : undefined} style={style}>
+	<pre class="decode-frame__border" aria-hidden="true"></pre>
+	<div class="decode-frame__content"><slot /></div>
+</div>
+
+<script>
+	import { mountDecodeFrames } from '../../lib/decode/mount';
+	mountDecodeFrames();
+</script>
+
+<style>
+	.decode-frame {
+		position: relative;
+		--frame-color: var(--color-subtle);
+		border: 1px solid var(--color-subtle); /* no-JS fallback */
+	}
+	:global(.js) .decode-frame { border-color: transparent; }
+	.decode-frame[data-active][data-branded] { --frame-color: var(--brand); }
+	.decode-frame[data-active][data-branded] :global(.ascii-header) { color: var(--brand); }
+	.decode-frame__border {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+		font-size: 13px;
+		line-height: 16px;
+		white-space: pre;
+		overflow: hidden;
+		pointer-events: none;
+		color: var(--frame-color);
+		transition: color 0.6s;
+	}
+	.decode-frame__content { position: relative; padding: 48px 24px; }
+	@media (min-width: 640px) { .decode-frame__content { padding: 64px 56px; } }
+</style>

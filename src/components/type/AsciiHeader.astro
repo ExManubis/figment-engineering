@@ -1,0 +1,20 @@
+---
+import { ansiShadow } from '../../lib/type/figlet';
+
+interface Props { text: string }
+const art = ansiShadow(Astro.props.text);
+---
+
+<pre class="ascii-header" data-ascii-header aria-hidden="true">{art}</pre>
+
+<style>
+	.ascii-header {
+		margin: 0;
+		font-size: 14px;
+		line-height: 1;
+		white-space: pre;
+		overflow: hidden;
+		color: var(--color-fg);
+		transition: color 0.6s;
+	}
+</style>
