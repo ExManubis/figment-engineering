@@ -1,8 +1,12 @@
 /** Renders every Figbot teaser output into figbot/out/. Run: npx tsx figbot/render.ts */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { Resvg } from '@resvg/resvg-js';
 import { EXPRESSIONS, GRID, POSES, cells, type Pose } from './src/model';
 import { BG_COLOR, FG_COLOR, svgBody, toSvg } from './src/svg';
+import { FPS, LOOP, poseAt } from './src/timeline';
 
 const OUT = 'figbot/out';
 const FONT = 'scripts/assets/DepartureMono-Regular.otf';
@@ -39,4 +43,18 @@ const H = MARGIN * 2 + rows * (TILE + LABEL) + (rows - 1) * GAP;
 const sheet = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${BG_COLOR}"/>${tiles.join('')}</svg>`;
 writeFileSync(`${OUT}/sheet.png`, png(sheet, W));
 
-console.log('stills written');
+// loop: 420 deterministic frames → MP4 (1080², 30 fps) and GIF (540², 15 fps)
+const frames = mkdtempSync(join(tmpdir(), 'figbot-'));
+try {
+  for (let f = 0; f < LOOP * FPS; f++) {
+    writeFileSync(join(frames, `f${String(f).padStart(4, '0')}.png`), png(square(poseAt(f / FPS)), 1080));
+  }
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', join(frames, 'f%04d.png'),
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', `${OUT}/loop.mp4`]);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${OUT}/loop.mp4`,
+    '-vf', 'fps=15,scale=540:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=16[p];[b][p]paletteuse=dither=none', '-loop', '0', `${OUT}/loop.gif`]);
+} finally {
+  rmSync(frames, { recursive: true, force: true });
+}
+
+console.log('figbot/out written');
