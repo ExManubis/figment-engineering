@@ -1,26 +1,7 @@
-<main class="flex-1 flex items-center justify-center z-10 relative">
-	<h1 class="font-serif font-medium text-[clamp(3rem,5.5vw,4.8rem)] leading-[1.2] tracking-[-0.03em] text-cream max-w-155 text-center">
-		<span class="word">Great</span>
-		<span class="word">design</span>
-		<span class="word">should</span>
-		<span class="word">be</span>
-		<span class="word">for</span>
-		<span class="word text-warm-sand italic">everyone.</span>
-	</h1>
-</main>
+---
+import { SITE } from '../../lib/seo';
+---
 
-<style>
-	.word {
-		display: inline-block;
-		opacity: 0;
-		transform: translateY(14px);
-		animation: wordIn 0.5s ease forwards;
-	}
-
-	.word:nth-child(1) { animation-delay: 0.3s; }
-	.word:nth-child(2) { animation-delay: 0.38s; }
-	.word:nth-child(3) { animation-delay: 0.46s; }
-	.word:nth-child(4) { animation-delay: 0.54s; }
-	.word:nth-child(5) { animation-delay: 0.62s; }
-	.word:nth-child(6) { animation-delay: 0.72s; }
-</style>
+<section id="top" class="flex min-h-svh flex-col items-center justify-center gap-10 px-6 pt-20">
+	<p class="text-center text-[20px] leading-[1.4]">{SITE.motto}</p>
+</section>
