@@ -14,6 +14,8 @@ import { SITE, personJsonLd } from '../lib/seo';
 		<meta name="description" content={SITE.description} />
 		<link rel="canonical" href={SITE.url} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
 		<meta name="theme-color" content="#0A0A0A" />
 
@@ -23,6 +25,10 @@ import { SITE, personJsonLd } from '../lib/seo';
 		<meta property="og:title" content={SITE.title} />
 		<meta property="og:description" content={SITE.description} />
 		<meta property="og:locale" content="en_US" />
+		<meta property="og:image" content={`${SITE.url}/og.png`} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta name="twitter:image" content={`${SITE.url}/og.png`} />
 		<meta name="twitter:card" content="summary_large_image" />
 
 		<script type="application/ld+json" set:html={JSON.stringify(personJsonLd())} />
