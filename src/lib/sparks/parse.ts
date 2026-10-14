@@ -22,3 +22,12 @@ export function parseBeanSvg(svg: string, maxX = 450, pitch = 6): BeanData {
     dots,
   };
 }
+
+/** A copy of `bean` with `pad` empty cells on every side, so particles can travel beyond the sprite's own bounds. */
+export function padBean(bean: BeanData, pad: number): BeanData {
+  return {
+    cols: bean.cols + 2 * pad,
+    rows: bean.rows + 2 * pad,
+    dots: bean.dots.map((d) => ({ x: d.x + pad, y: d.y + pad, color: d.color })),
+  };
+}

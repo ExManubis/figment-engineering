@@ -1,0 +1,38 @@
+---
+import { TRANSCRIPT } from '../../../lib/sparks/demo';
+---
+
+<div class="claudewitz-demo grid items-center gap-10 sm:grid-cols-[minmax(0,1fr)_auto]" data-claudewitz-demo>
+	<button type="button" class="terminal" data-replay aria-label="Replay the Claudewitz install demo">
+		<pre data-terminal>{TRANSCRIPT}</pre>
+	</button>
+	<canvas class="mx-auto max-w-full" data-bean aria-hidden="true"></canvas>
+</div>
+
+<script>
+	import { mountClaudewitzDemo } from '../../../lib/sparks/mount';
+	import { reportError } from '../../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-claudewitz-demo]').forEach((el) => {
+		try { mountClaudewitzDemo(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	.terminal {
+		display: block;
+		width: 100%;
+		min-height: 9.5em;
+		padding: 20px 22px;
+		border: 1px solid var(--color-subtle);
+		background: #0d0d0d;
+		color: var(--color-fg);
+		font: inherit;
+		font-size: 13px;
+		line-height: 1.6;
+		text-align: left;
+		cursor: pointer;
+		overflow-x: auto;
+	}
+	.terminal:hover { border-color: var(--color-muted); }
+	.terminal pre { margin: 0; white-space: pre; }
+</style>

@@ -1,0 +1,38 @@
+---
+import DecodeFrame from '../frame/DecodeFrame.astro';
+import AsciiHeader from '../type/AsciiHeader.astro';
+import ClaudewitzDemo from './demos/ClaudewitzDemo.astro';
+import { frameLabel, type Project } from '../../data/projects';
+
+interface Props { project: Project; index: number }
+const { project, index } = Astro.props;
+const demos = { claudewitz: ClaudewitzDemo };
+const Demo = demos[project.demo];
+---
+
+<section id={project.id} aria-labelledby={`${project.id}-title`} class="mx-auto w-full max-w-[960px] px-6" data-copy-scope>
+	<DecodeFrame label={frameLabel(index, project.name)} brand={project.brand}>
+		<h2 id={`${project.id}-title`} class="sr-only">{project.name}</h2>
+		<AsciiHeader text={project.name} />
+		<p class="mt-6 max-w-[34rem] text-[16px] leading-[1.6] text-muted">{project.description}</p>
+		<div class="mt-12"><Demo /></div>
+		<ul class="mt-12 grid max-w-[40rem] gap-3 text-[15px] leading-[1.6]">
+			{project.features.map((f) => <li>{f}</li>)}
+		</ul>
+		<div class="label mt-12 flex flex-wrap gap-x-8 gap-y-4">
+			{project.links.map((l) =>
+				l.copy ? (
+					<button type="button" class="link" data-copy={l.copy} data-event={l.event}>{l.label}</button>
+				) : (
+					<a class="link" href={l.href} target="_blank" rel="noopener">{l.label}</a>
+				),
+			)}
+		</div>
+		<p class="sr-only" aria-live="polite" data-copy-status></p>
+	</DecodeFrame>
+</section>
+
+<script>
+	import { mountCopyButtons } from '../../lib/copy/mount';
+	mountCopyButtons();
+</script>
