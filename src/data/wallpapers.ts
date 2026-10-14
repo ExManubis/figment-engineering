@@ -1,0 +1,46 @@
+import sizes from './wallpaper-sizes.json';
+
+export type DeviceId = 'mac' | 'ipad' | 'iphone';
+
+export interface Device {
+  id: DeviceId;
+  label: string;
+  width: number;
+  height: number;
+  /** dot-grid cell of the render, in px; finer screens get a finer grid */
+  cell: number;
+  /** preview width in px: the stage shows it at about half this */
+  previewWidth: number;
+}
+
+export const DEVICES: Device[] = [
+  { id: 'mac', label: 'Mac', width: 5120, height: 2880, cell: 16, previewWidth: 1440 },
+  { id: 'ipad', label: 'iPad', width: 2752, height: 2064, cell: 12, previewWidth: 1120 },
+  { id: 'iphone', label: 'iPhone', width: 1320, height: 2868, cell: 12, previewWidth: 440 },
+];
+
+export interface Wallpaper {
+  id: string;
+  name: string;
+  /** file size per device, written by scripts/wallpapers.ts */
+  bytes: Record<DeviceId, number>;
+}
+
+const NAMES: [string, string][] = [
+  ['fe-monolith', 'Monolith'],
+  ['fe-motion-study', 'Motion study'],
+  ['fe-homepage', 'Homepage'],
+  ['fe-macro', 'Macro'],
+  ['cw-bean', 'Claudewitz'],
+  ['cw-dissolve', 'Claudewitz · dissolve'],
+];
+
+export const WALLPAPERS: Wallpaper[] = NAMES.map(([id, name]) => ({ id, name, bytes: (sizes as Record<string, Record<DeviceId, number>>)[id] }));
+
+export const downloadPath = (id: string, device: DeviceId): string => `/wallpapers/${device}/${id}.png`;
+export const previewPath = (id: string, device: DeviceId): string => `/wallpapers/preview/${device}/${id}.png`;
+/** the Mac version, small, for the thumbnail strip */
+export const thumbPath = (id: string): string => `/wallpapers/thumb/${id}.png`;
+export const THUMB_WIDTH = 320;
+
+export const formatBytes = (n: number): string => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.round(n / 1000)} KB`);

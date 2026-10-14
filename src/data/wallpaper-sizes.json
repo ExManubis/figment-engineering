@@ -1,0 +1,32 @@
+{
+  "fe-monolith": {
+    "mac": 417039,
+    "ipad": 266023,
+    "iphone": 208733
+  },
+  "fe-motion-study": {
+    "mac": 415955,
+    "ipad": 233749,
+    "iphone": 233766
+  },
+  "fe-homepage": {
+    "mac": 411746,
+    "ipad": 252754,
+    "iphone": 226035
+  },
+  "fe-macro": {
+    "mac": 762796,
+    "ipad": 362415,
+    "iphone": 268380
+  },
+  "cw-bean": {
+    "mac": 652860,
+    "ipad": 436595,
+    "iphone": 387242
+  },
+  "cw-dissolve": {
+    "mac": 678016,
+    "ipad": 426078,
+    "iphone": 255211
+  }
+}

@@ -17,7 +17,7 @@ vi.mock('../report', () => ({ reportError: m.reportError }));
 
 import portrait from '../../data/portrait.json';
 import { mountPortrait, mountWhoami } from './mount';
-import { TYPE_DELAY_S, TYPE_S } from './whoami';
+import { TYPE_DELAY_S, TYPE_S } from '../type/typed';
 
 const lit = (portrait.cells as number[]).filter((v) => v > 0).length;
 

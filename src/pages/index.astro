@@ -4,6 +4,7 @@ import Navigation from '../components/global/Navigation.astro';
 import Hero from '../components/index/Hero.astro';
 import Showcase from '../components/work/Showcase.astro';
 import About from '../components/about/About.astro';
+import Wallpapers from '../components/wallpapers/Wallpapers.astro';
 import Footer from '../components/global/Footer.astro';
 import { projects } from '../data/projects';
 ---
@@ -16,7 +17,8 @@ import { projects } from '../data/projects';
 			<h2 class="sr-only">Work</h2>
 			{projects.map((project, index) => <Showcase project={project} index={index} />)}
 		</div>
-		<About index={projects.length + 1} />
+		<Wallpapers index={projects.length + 1} />
+		<About index={projects.length + 2} />
 	</main>
 	<Footer />
 </Layout>

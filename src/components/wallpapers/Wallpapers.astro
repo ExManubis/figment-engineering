@@ -1,0 +1,96 @@
+---
+import DecodeFrame from '../frame/DecodeFrame.astro';
+import { DEVICES, WALLPAPERS, downloadPath, formatBytes, previewPath, thumbPath, THUMB_WIDTH } from '../../data/wallpapers';
+
+interface Props { index: number }
+const label = `${String(Astro.props.index).padStart(2, '0')} / WALLPAPERS`;
+// server-rendered on the first design for Mac; the script takes over from there
+const first = WALLPAPERS[0];
+const mac = DEVICES[0];
+---
+
+<section id="wallpapers" aria-labelledby="wallpapers-title" class="mx-auto w-full max-w-[1200px] px-6" data-scroll-stop data-wallpapers data-device="mac">
+	<DecodeFrame label={label}>
+		<h2 id="wallpapers-title" class="sr-only">Wallpapers</h2>
+		<div class="grid items-center gap-10 lg:grid-cols-[1fr_300px] lg:gap-14">
+			{/* one outline per device; the section's data-device shows the matching one */}
+			<div class="stage">
+				<div class="device mac">
+					<div class="screen"><img data-wp-preview data-for="mac" src={previewPath(first.id, 'mac')} alt={`${first.name} wallpaper for Mac`} width={mac.width} height={mac.height} loading="lazy" /></div>
+					<div class="stand"></div>
+				</div>
+				{DEVICES.slice(1).map((d) => (
+					<div class={`device ${d.id}`}>
+						<div class="screen"><img data-wp-preview data-for={d.id} alt="" width={d.width} height={d.height} loading="lazy" /></div>
+					</div>
+				))}
+			</div>
+
+			<div>
+				{/* the header is the selected file, typed in; screen readers get the design's name below instead */}
+				<div aria-hidden="true">
+					<p class="text-[14px] text-muted" data-wp-path>~/wallpapers/mac/</p>
+					<p class="font-display mt-2 text-[34px] leading-[1] sm:text-[40px]"><span data-wp-file>{first.id}.png</span><span class="cursor" data-wp-cursor></span></p>
+				</div>
+				<p class="mt-6 max-w-[30rem] text-[14px] leading-[1.6] text-muted">Rendered with the same code as this site: the cube, the dots, the bean. Free to use.</p>
+				<p class="label mt-8 text-fg" data-wp-name aria-live="polite">{first.name}</p>
+				<div class="seg no-js-hide mt-4" role="group" aria-label="Device">
+					{DEVICES.map((d, k) => <button type="button" data-wp-device={d.id} aria-pressed={String(k === 0)}>{d.label}</button>)}
+				</div>
+				<a class="download label mt-5" data-wp-download href={downloadPath(first.id, 'mac')} download={`figment-${first.id}-mac.png`}>
+					<span aria-hidden="true">↓</span> Download
+				</a>
+				<p class="label mt-3 text-muted" data-wp-meta>{`${mac.width}×${mac.height} PNG · ${formatBytes(first.bytes.mac)}`}</p>
+			</div>
+		</div>
+
+		<div class="thumbs no-js-hide mt-8" role="group" aria-label="Wallpaper">
+			{WALLPAPERS.map((w, k) => (
+				<button type="button" data-wp-design={w.id} aria-pressed={String(k === 0)} aria-label={w.name}>
+					<img src={thumbPath(w.id)} alt="" width={THUMB_WIDTH} height={Math.round((THUMB_WIDTH * 9) / 16)} loading="lazy" />
+				</button>
+			))}
+		</div>
+	</DecodeFrame>
+</section>
+
+<script>
+	import { mountWallpapers } from '../../lib/wallpapers/mount';
+	import { reportError } from '../../lib/report';
+	document.querySelectorAll<HTMLElement>('[data-wallpapers]').forEach((el) => {
+		try { mountWallpapers(el); } catch (err) { reportError(err); }
+	});
+</script>
+
+<style>
+	/* a fixed-height stage, so switching device doesn't move the page */
+	.stage { --stage: 300px; height: var(--stage); display: flex; align-items: center; justify-content: center; }
+	@media (min-width: 640px) { .stage { --stage: 420px; } }
+	.device { display: none; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+	[data-device='mac'] .device.mac,
+	[data-device='ipad'] .device.ipad,
+	[data-device='iphone'] .device.iphone { display: flex; }
+	.screen { border: 1px solid #555; background: #000; }
+	.screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+	/* hairline device outlines: a Mac display on its stand, an iPad and an iPhone */
+	.mac { width: 100%; }
+	/* as wide as the column, but never taller than the stage (less the stand) */
+	.mac .screen { width: min(100%, calc((var(--stage) - 24px) * 16 / 9)); aspect-ratio: 16 / 9; padding: 6px; border-radius: 6px; }
+	.mac .stand { width: 22%; height: 22px; border: 1px solid #555; border-top: 0; }
+	.ipad .screen { height: 100%; aspect-ratio: 2752 / 2064; padding: 12px; border-radius: 20px; }
+	.ipad img { border-radius: 6px; }
+	.iphone .screen { height: 100%; aspect-ratio: 1320 / 2868; padding: 6px; border-radius: 26px; }
+	.iphone img { border-radius: 20px; }
+	.cursor { display: inline-block; width: 0.5em; height: 0.8em; margin-left: 0.08em; vertical-align: -0.04em; background: var(--color-fg); }
+	.seg { display: inline-flex; border: 1px solid var(--color-subtle); }
+	.seg button { font: inherit; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; background: none; border: 0; color: var(--color-muted); padding: 7px 12px; cursor: pointer; }
+	.seg button:hover { color: var(--color-fg); }
+	.seg button[aria-pressed='true'] { color: var(--color-bg); background: var(--color-fg); }
+	.download { display: flex; width: fit-content; gap: 10px; border: 1px dotted var(--color-muted); padding: 10px 18px; color: var(--color-fg); text-decoration: none; transition: border-color 0.2s; }
+	.download:hover, .download:focus-visible { border-color: var(--color-fg); }
+	.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+	@media (min-width: 640px) { .thumbs { grid-template-columns: repeat(6, 1fr); } }
+	.thumbs button { padding: 0; border: 1px solid var(--color-subtle); background: none; cursor: pointer; opacity: 0.55; transition: opacity 0.2s, border-color 0.2s; }
+	.thumbs button:hover, .thumbs button[aria-pressed='true'] { opacity: 1; border-color: var(--color-muted); }
+	.thumbs img { display: block; width: 100%; height: auto; }
+</style>

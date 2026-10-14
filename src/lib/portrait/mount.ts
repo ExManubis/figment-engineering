@@ -6,7 +6,7 @@ import { prefersReducedMotion, register, type Handle } from '../motion/scheduler
 import { reportError } from '../report';
 import type { PortraitData } from './dither';
 import { Scatter } from './scatter';
-import { whoamiText } from './whoami';
+import { typedText } from '../type/typed';
 
 const CELL = 4;
 
@@ -119,7 +119,7 @@ export function mountWhoami(root: HTMLElement): void {
           const r = frameEl.getBoundingClientRect();
           if (inFocus(r.top, r.bottom, window.innerHeight)) start = t;
         }
-        const { typed, cursor } = whoamiText(start === null ? null : t - start, name);
+        const { typed, cursor } = typedText(start === null ? null : t - start, name);
         if (nameEl.textContent !== typed) nameEl.textContent = typed;
         cursorEl.style.visibility = cursor ? '' : 'hidden';
       } catch (err) {
