@@ -128,10 +128,10 @@ const beanCells = (): DotCell[] => {
   return out;
 };
 
-/** 5 · Claudewitz: the bean, big, beside (or above) its gradient ANSI header and the install line, as one centred group */
+/** 5 · Claudewitz: tty, its mascot, big, beside (or above) its gradient ANSI header and the install line, as one centred group */
 function claudewitz(w: Wall) {
   const portrait = w.H > w.W;
-  const half = w.cell / 2; // bean dot pitch in half-cells, so it lines up with the texture every other dot or better
+  const half = w.cell / 2; // tty dot pitch in half-cells, so it lines up with the texture every other dot or better
   const target = portrait ? (w.W * 0.62) / bean.cols : (w.H * 0.52) / bean.rows;
   const bc = Math.max(half, Math.round(target / half) * half);
   const beanW = bean.cols * bc, beanH = bean.rows * bc;
@@ -160,7 +160,7 @@ function claudewitz(w: Wall) {
   marks(w, ['CLAUDEWITZ', 'FIGMENT ENGINEERING']);
 }
 
-/** 6 · Dissolve: the bean coming apart into sparks that drift off across the screen */
+/** 6 · Dissolve: tty coming apart into sparks that drift off across the screen */
 function dissolve(w: Wall) {
   const portrait = w.H > w.W;
   const rng = mulberry32(7);
@@ -173,7 +173,7 @@ function dissolve(w: Wall) {
   const gi = portrait ? Math.round((pg.cols - bean.cols) / 2) : Math.round(pg.cols * 0.3 - bean.cols / 2);
   const gj = portrait ? Math.round(pg.rows * 0.3) : Math.round((pg.rows - bean.rows) / 2);
   w.texture(0.08, { cx: 0.5, cy: 0.5, rx: 0.75, ry: 0.7, inner: 0.35 });
-  // the further right (or down) a dot sits in the bean, the further it has blown away, snapped back onto the grid
+  // the further right (or down) a dot sits in tty, the further it has blown away, snapped back onto the grid
   const reach = portrait ? w.H * 0.4 : w.W * 0.55;
   for (const d of bean.dots) {
     const u = portrait ? d.y / bean.rows : d.x / bean.cols;
