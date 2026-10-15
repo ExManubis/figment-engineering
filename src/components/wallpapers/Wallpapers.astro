@@ -94,9 +94,9 @@ const mac = DEVICES[0];
 	.seg button[aria-pressed='true'] { color: var(--color-bg); background: var(--color-fg); }
 	.download { display: flex; width: fit-content; gap: 10px; border: 1px dotted var(--color-muted); padding: 10px 18px; color: var(--color-fg); text-decoration: none; transition: border-color 0.2s; }
 	.download:hover, .download:focus-visible { border-color: var(--color-fg); }
-	.thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-	@media (min-width: 640px) { .thumbs { grid-template-columns: repeat(6, 1fr); } }
-	.thumbs button { padding: 0; border: 1px solid var(--color-subtle); background: none; cursor: pointer; opacity: 0.55; transition: opacity 0.2s, border-color 0.2s; }
+	/* one row that scrolls sideways; the next thumbnail is always cut by the edge, which says there's more */
+	.thumbs { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--color-subtle) transparent; padding-bottom: 8px; }
+	.thumbs button { flex: 0 0 128px; scroll-snap-align: start; padding: 0; border: 1px solid var(--color-subtle); background: none; cursor: pointer; opacity: 0.55; transition: opacity 0.2s, border-color 0.2s; }
 	.thumbs button:hover, .thumbs button[aria-pressed='true'] { opacity: 1; border-color: var(--color-muted); }
 	.thumbs img { display: block; width: 100%; height: auto; }
 </style>

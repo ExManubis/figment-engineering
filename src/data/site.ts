@@ -12,7 +12,7 @@ export function footerLinks(s = social): { label: string; href: string }[] {
   const links: { label: string; href?: string }[] = [
     { label: EMAIL, href: `mailto:${EMAIL}` },
     { label: 'GitHub', href: s.github },
-    { label: 'X', href: s.x },
+    { label: 'x.com', href: s.x },
     { label: 'LinkedIn', href: s.linkedin },
     { label: 'smallclaims', href: SMALLCLAIMS_URL },
   ];

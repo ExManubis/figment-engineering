@@ -6,10 +6,10 @@
     "macbook": 316385
   },
   "fe-motion-study": {
-    "mac": 415955,
-    "ipad": 233749,
-    "iphone": 233766,
-    "macbook": 298575
+    "mac": 402946,
+    "ipad": 227333,
+    "iphone": 224589,
+    "macbook": 289188
   },
   "fe-homepage": {
     "mac": 395742,
@@ -34,5 +34,47 @@
     "ipad": 217624,
     "iphone": 207594,
     "macbook": 335178
+  },
+  "fe-blueprint": {
+    "mac": 517031,
+    "macbook": 397772,
+    "ipad": 337360,
+    "iphone": 273598
+  },
+  "fe-field": {
+    "mac": 988096,
+    "macbook": 766477,
+    "ipad": 603676,
+    "iphone": 326422
+  },
+  "fe-decode": {
+    "mac": 1226274,
+    "macbook": 801311,
+    "ipad": 518061,
+    "iphone": 334664
+  },
+  "fe-principles": {
+    "mac": 701102,
+    "macbook": 465564,
+    "ipad": 375604,
+    "iphone": 312363
+  },
+  "fe-boot": {
+    "mac": 250617,
+    "macbook": 205952,
+    "ipad": 173543,
+    "iphone": 167810
+  },
+  "fe-trail": {
+    "mac": 308855,
+    "macbook": 227708,
+    "ipad": 190253,
+    "iphone": 165085
+  },
+  "fe-texture": {
+    "mac": 1920522,
+    "macbook": 1113064,
+    "ipad": 803157,
+    "iphone": 437888
   }
 }

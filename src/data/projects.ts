@@ -1,4 +1,4 @@
-export type DemoId = 'claudewitz' | 'promptty';
+export type DemoId = 'claudewitz' | 'figbot' | 'promptty';
 
 export interface ProjectLink {
   label: string;
@@ -11,16 +11,16 @@ export interface Project {
   id: string;
   /** display name; also the ANSI header text */
   name: string;
-  /** primary is the solid brand colour; gradient, when set, runs left → right across the ANSI header and the frame instead */
-  brand: { primary: string; secondary?: string; gradient?: [string, string] };
+  /** primary is the solid brand colour; gradient, when set, is a list of stops that runs left → right across the ANSI header and the frame instead */
+  brand: { primary: string; secondary?: string; gradient?: string[] };
   description: string;
   /** small square mark for the hero's link to the section */
   icon: string;
-  /** 3–4 short lines */
+  /** 3–4 short lines; none for a teaser that has no links yet */
   features: string[];
   links: ProjectLink[];
-  /** cga: the header redrawn in the style of the project's logo; default ANSI Shadow in the brand gradient */
-  header?: 'cga';
+  /** cga: the header redrawn in the style of the project's logo; figbot: pixel type with the mascot as the o; default ANSI Shadow in the brand gradient */
+  header?: 'cga' | 'figbot';
   /** short muted line beside the links, e.g. system requirements */
   note?: string;
   demo: DemoId;
@@ -30,7 +30,7 @@ export const projects: Project[] = [
   {
     id: 'claudewitz',
     name: 'Claudewitz',
-    brand: { primary: '#DA7756', secondary: '#B497FF', gradient: ['#DA702C', '#3AA99F'] },
+    brand: { primary: '#DA7756', secondary: '#B497FF', gradient: ['#DA7756', '#D87E80', '#D286A9', '#C78ED4', '#B497FF'] },
     icon: '/icons/claudewitz.svg',
     description: 'A Crush-style terminal UI for Claude Code that runs on the subscription you already have.',
     features: [
@@ -44,6 +44,18 @@ export const projects: Project[] = [
       { label: '$ brew install exmanubis/tap/claudewitz', copy: 'brew install exmanubis/tap/claudewitz' },
     ],
     demo: 'claudewitz',
+  },
+  {
+    id: 'figbot',
+    name: 'Figbot',
+    brand: { primary: '#F2F2F2', gradient: ['#7A7A7A', '#F2F2F2'] },
+    icon: '/icons/figbot.svg',
+    description: 'A friendly, open-source agent that lives on your machine and gets things done.',
+    features: [],
+    links: [],
+    note: 'Coming soon',
+    header: 'figbot',
+    demo: 'figbot',
   },
   {
     id: 'promptty',
